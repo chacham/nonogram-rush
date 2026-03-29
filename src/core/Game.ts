@@ -5,7 +5,7 @@ import {
   PUSH_INTERVAL_BASE, PUSH_INTERVAL_MIN, PUSH_INTERVAL_SCALE,
   STAGE_GOAL_LINES, COMBO_FREEZE_DURATION, MAX_HEARTS,
 } from '@/config/GameConfig.js';
-import { GameState, CellState, CellType, RowData } from '@/types/index.js';
+import { GameState, GameMode, CellState, CellType, RowData } from '@/types/index.js';
 import { StateMachine, createGameStateMachine } from '@/core/StateMachine.js';
 import { GridContainer } from '@/views/GridContainer.js';
 import { UIOverlay } from '@/views/UIOverlay.js';
@@ -30,6 +30,7 @@ export class Game {
 
   private rows: RowData[] = [];
   private hearts = MAX_HEARTS;
+  private mode: GameMode = GameMode.ASSISTED;
   private pushTimer = 0;
   private pushInterval: number;
   private freezeTimer = 0;
@@ -206,19 +207,26 @@ export class Game {
         (newState === CellState.FILLED && rowData.solution[col] === CellType.EMPTY) ||
         (newState === CellState.CROSSED && rowData.solution[col] === CellType.FILLED);
 
-      if (isWrong) {
+      if (isWrong && this.mode === GameMode.ASSISTED) {
         this.hearts = Math.max(0, this.hearts - 1);
         this.ui.updateHearts(this.hearts);
         this.shakeScene(4, 0.12);
+
+        const correct = rowData.solution[col] === CellType.FILLED
+          ? CellState.FILLED
+          : CellState.CROSSED;
+        rowData.cells[col] = correct;
+        this.gridContainer.updateRowCell(rowIndex, col, correct);
+
         if (this.hearts <= 0) {
           this.sm.forceState(GameState.GAME_OVER);
           this.ui.showGameOver();
           return;
         }
+      } else {
+        rowData.cells[col] = newState;
+        this.gridContainer.updateRowCell(rowIndex, col, newState);
       }
-
-      rowData.cells[col] = newState;
-      this.gridContainer.updateRowCell(rowIndex, col, newState);
     }
 
     this.checkRowCompletion(rowIndex);

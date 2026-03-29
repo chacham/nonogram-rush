@@ -27,4 +27,6 @@ export const MAX_HEARTS = 5;
 
 export const ROW_FILL_RATIO = 0.5;
 
+export const DEFAULT_GAME_MODE = 'ASSISTED' as const;
+
 export const SESSION_STORAGE_KEY = 'nonogram-rush-cleared-rows';

@@ -22,6 +22,11 @@ export interface RowData {
   originalIndex: number;
 }
 
+export enum GameMode {
+  ASSISTED = 'ASSISTED',
+  NORMAL = 'NORMAL',
+}
+
 export enum GameState {
   IDLE = 'IDLE',
   PUSHING = 'PUSHING',
