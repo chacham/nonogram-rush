@@ -2,7 +2,7 @@ import { Application, Container, Ticker } from 'pixi.js';
 import gsap from 'gsap';
 import {
   GRID_COLS, GRID_VISIBLE_ROWS,
-  PUSH_INTERVAL_BASE, PUSH_INTERVAL_MIN, SPEED_FACTOR,
+  PUSH_INTERVAL_BASE, PUSH_INTERVAL_MIN,
   STAGE_GOAL_LINES, COMBO_FREEZE_DURATION,
 } from '@/config/GameConfig.js';
 import { GameState, CellState, RowData } from '@/types/index.js';
@@ -136,6 +136,7 @@ export class Game {
       }
 
       this.pushTimer += deltaMS;
+      this.pushInterval = this.calcPushInterval(this.rows.length);
       this.ui.updatePushTimer(this.pushTimer / this.pushInterval);
 
       this.gridContainer.setVisibleRowCount(this.rows.length);
@@ -168,6 +169,11 @@ export class Game {
 
       this.sm.forceState(GameState.IDLE);
     });
+  }
+
+  private calcPushInterval(rowCount: number): number {
+    const t = Math.log(rowCount + 1) / Math.log(GRID_VISIBLE_ROWS + 1);
+    return PUSH_INTERVAL_MIN + (PUSH_INTERVAL_BASE - PUSH_INTERVAL_MIN) * t;
   }
 
   private checkGameOver(): boolean {
@@ -234,12 +240,6 @@ export class Game {
 
       this.gridContainer.removeRowsAndRebuild([rowIndex], this.rows);
       this.input.updateRowCount(this.rows.length);
-
-      const level = this.scoring.current.level;
-      this.pushInterval = Math.max(
-        PUSH_INTERVAL_MIN,
-        PUSH_INTERVAL_BASE * Math.pow(SPEED_FACTOR, level - 1)
-      );
 
       this.sm.forceState(GameState.IDLE);
     });
