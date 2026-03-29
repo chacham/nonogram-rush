@@ -60,6 +60,9 @@ export class InputSystem {
       this.isPointerDown = true;
       this.dragMode = button === 2 ? 'cross' : 'fill';
       this.dragStartState = currentState;
+      this.cursorRow = -1;
+      this.cursorCol = -1;
+      this.onMoveCursor?.(-1, -1);
     };
 
     gridContainer.onCellPointerEnter = (rowIndex, col) => {
