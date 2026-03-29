@@ -35,6 +35,10 @@ export class RowHintView extends Container {
   setDim(dim: boolean): void {
     this.textObj.tint = dim ? COLORS.hintTextDim : COLORS.hintText;
   }
+
+  setHighlight(active: boolean): void {
+    this.textObj.tint = active ? COLORS.hintHighlight : COLORS.hintText;
+  }
 }
 
 export class ColHintView extends Container {
@@ -63,11 +67,16 @@ export class ColHintView extends Container {
     this.textObj.x = (CELL_SIZE - this.textObj.width) / 2;
     this.textObj.y = COL_HINT_AREA_HEIGHT - this.textObj.height - 4;
   }
+
+  setHighlight(active: boolean): void {
+    this.textObj.tint = active ? COLORS.hintHighlight : COLORS.hintText;
+  }
 }
 
 export class ColumnHintsContainer extends Container {
   private hintViews: ColHintView[] = [];
   private readonly cols: number;
+  private _highlightedCol = -1;
 
   constructor(cols: number) {
     super();
@@ -121,5 +130,21 @@ export class ColumnHintsContainer extends Container {
       gsap.killTweensOf(view);
       gsap.to(view, { alpha: 1, duration: 0.3, ease: 'power2.out' });
     }
+  }
+
+  highlightCol(col: number): void {
+    if (this._highlightedCol === col) return;
+    this.clearHighlight();
+    this._highlightedCol = col;
+    const view = this.hintViews[col];
+    if (view) view.setHighlight(true);
+  }
+
+  clearHighlight(): void {
+    if (this._highlightedCol >= 0) {
+      const view = this.hintViews[this._highlightedCol];
+      if (view) view.setHighlight(false);
+    }
+    this._highlightedCol = -1;
   }
 }

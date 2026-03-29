@@ -90,6 +90,10 @@ export class RowView extends Container {
   }
 
   setHighlightRow(active: boolean): void {
-    this.hintView.setDim(!active);
+    if (active) {
+      this.hintView.setHighlight(true);
+    } else {
+      this.hintView.setDim(false);
+    }
   }
 }

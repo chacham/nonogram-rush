@@ -20,6 +20,7 @@ export class GridContainer extends Container {
   private rowPool: RowView[] = [];
   private colHints: ColumnHintsContainer;
   private gridBg: Graphics;
+  private crosshairLayer: Graphics;
   private _rows: RowData[] = [];
   private _cursorRow = -1;
   private _cursorCol = -1;
@@ -40,6 +41,9 @@ export class GridContainer extends Container {
     this.addChild(this.gridBg);
     this.drawBackground();
 
+    this.crosshairLayer = new Graphics();
+    this.addChild(this.crosshairLayer);
+
     this.colHints = new ColumnHintsContainer(cols);
     this.colHints.x = HINT_AREA_WIDTH;
     this.colHints.y = 0;
@@ -49,9 +53,18 @@ export class GridContainer extends Container {
   private drawBackground(): void {
     const w = HINT_AREA_WIDTH + GRID_WIDTH;
     const h = COL_HINT_AREA_HEIGHT + visibleRowsHeight(this.visibleRows);
+    const gridH = visibleRowsHeight(this.visibleRows);
     this.gridBg.clear();
-    this.gridBg.rect(HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT, GRID_WIDTH, visibleRowsHeight(this.visibleRows));
+    this.gridBg.rect(HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT, GRID_WIDTH, gridH);
     this.gridBg.fill({ color: COLORS.gridBackground });
+
+    for (let col = 0; col < this.cols; col++) {
+      const x = HINT_AREA_WIDTH + col * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2;
+      this.gridBg.moveTo(x, COL_HINT_AREA_HEIGHT);
+      this.gridBg.lineTo(x, COL_HINT_AREA_HEIGHT + gridH);
+      this.gridBg.stroke({ color: COLORS.gridGuide, width: 1, alpha: 0.15 });
+    }
+
     this.gridBg.rect(0, 0, w, h);
     this.gridBg.stroke({ color: COLORS.cellEmptyBorder, width: 0.5, alpha: 0.3 });
   }
@@ -147,12 +160,37 @@ export class GridContainer extends Container {
   }
 
   private applyCursorHighlight(): void {
+    this.crosshairLayer.clear();
+    this.colHints.clearHighlight();
+
+    const hasCursor = this._cursorRow >= 0 && this._cursorCol >= 0;
+
     for (const view of this.rowViews) {
+      const isActiveRow = hasCursor && view.rowIndex === this._cursorRow;
+      view.setHighlightRow(isActiveRow);
+
       for (const cell of view.allCells) {
-        const isHighlighted = view.rowIndex === this._cursorRow && cell.cellCol === this._cursorCol;
-        cell.setHighlight(isHighlighted);
+        const isCursorCell = isActiveRow && cell.cellCol === this._cursorCol;
+        cell.setHighlight(isCursorCell);
       }
     }
+
+    if (!hasCursor) return;
+
+    const gridH = visibleRowsHeight(this.visibleRows);
+    const colX = HINT_AREA_WIDTH + this._cursorCol * (CELL_SIZE + CELL_GAP);
+
+    this.crosshairLayer.rect(colX, COL_HINT_AREA_HEIGHT, CELL_SIZE, gridH);
+    this.crosshairLayer.fill({ color: COLORS.crosshairGuide, alpha: 0.07 });
+
+    const cursorView = this.rowViews.find(v => v.rowIndex === this._cursorRow);
+    if (cursorView) {
+      const rowY = cursorView.y;
+      this.crosshairLayer.rect(HINT_AREA_WIDTH, rowY, GRID_WIDTH, CELL_SIZE);
+      this.crosshairLayer.fill({ color: COLORS.crosshairGuide, alpha: 0.07 });
+    }
+
+    this.colHints.highlightCol(this._cursorCol);
   }
 
   updateRowCell(rowIndex: number, col: number, state: CellState): void {
