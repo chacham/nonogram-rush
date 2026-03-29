@@ -2,7 +2,7 @@ import { Application, Container, Ticker } from 'pixi.js';
 import gsap from 'gsap';
 import {
   GRID_COLS, GRID_VISIBLE_ROWS,
-  PUSH_INTERVAL_BASE, PUSH_INTERVAL_MIN,
+  PUSH_INTERVAL_BASE, PUSH_INTERVAL_MIN, PUSH_INTERVAL_SCALE,
   STAGE_GOAL_LINES, COMBO_FREEZE_DURATION,
 } from '@/config/GameConfig.js';
 import { GameState, CellState, RowData } from '@/types/index.js';
@@ -173,7 +173,7 @@ export class Game {
 
   private calcPushInterval(rowCount: number): number {
     const t = Math.log(rowCount + 1) / Math.log(GRID_VISIBLE_ROWS + 1);
-    return PUSH_INTERVAL_MIN + (PUSH_INTERVAL_BASE - PUSH_INTERVAL_MIN) * t;
+    return (PUSH_INTERVAL_MIN + (PUSH_INTERVAL_BASE - PUSH_INTERVAL_MIN) * t) * PUSH_INTERVAL_SCALE;
   }
 
   private checkGameOver(): boolean {
