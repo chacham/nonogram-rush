@@ -42,10 +42,17 @@ export class InputSystem {
     this.cursorRow = Math.min(this.cursorRow, Math.max(0, rows - 1));
   }
 
+  private heldAction: CellState | null = null;
+
   bindKeyboard(): () => void {
-    const handler = (e: KeyboardEvent) => this.handleKey(e);
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    const down = (e: KeyboardEvent) => this.handleKeyDown(e);
+    const up = (e: KeyboardEvent) => this.handleKeyUp(e);
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+    };
   }
 
   bindDragOnGrid(gridContainer: GridContainer): void {
@@ -74,8 +81,19 @@ export class InputSystem {
     };
   }
 
-  private handleKey(e: KeyboardEvent): void {
+  private handleKeyDown(e: KeyboardEvent): void {
     const code = e.code;
+
+    if (code === this.bindings.fill) {
+      this.heldAction = CellState.FILLED;
+      this.triggerMark(CellState.FILLED);
+      return;
+    }
+    if (code === this.bindings.cross) {
+      this.heldAction = CellState.CROSSED;
+      this.triggerMark(CellState.CROSSED);
+      return;
+    }
 
     if (code === this.bindings.up) {
       e.preventDefault();
@@ -89,10 +107,20 @@ export class InputSystem {
     } else if (code === this.bindings.right) {
       e.preventDefault();
       this.moveCursor(0, 1);
-    } else if (code === this.bindings.fill) {
-      this.triggerMark(CellState.FILLED);
-    } else if (code === this.bindings.cross) {
-      this.triggerMark(CellState.CROSSED);
+    }
+
+    if (this.heldAction !== null) {
+      this.triggerMark(this.heldAction);
+    }
+  }
+
+  private handleKeyUp(e: KeyboardEvent): void {
+    const code = e.code;
+    if (
+      (code === this.bindings.fill && this.heldAction === CellState.FILLED) ||
+      (code === this.bindings.cross && this.heldAction === CellState.CROSSED)
+    ) {
+      this.heldAction = null;
     }
   }
 
