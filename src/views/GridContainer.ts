@@ -210,6 +210,18 @@ export class GridContainer extends Container {
     this.deadLine.setDanger(level);
   }
 
+  revealColHint(col: number): void {
+    this.colHints.revealCol(col);
+  }
+
+  hideColHint(col: number): void {
+    this.colHints.hideCol(col);
+  }
+
+  hideAllColHints(): void {
+    this.colHints.hideAll();
+  }
+
   private updateColHints(): void {
     const activeCells = this._rows
       .filter(r => !r.cleared)

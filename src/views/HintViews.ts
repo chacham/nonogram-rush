@@ -80,6 +80,7 @@ export class ColumnHintsContainer extends Container {
       const view = new ColHintView();
       view.x = col * (CELL_SIZE + CELL_GAP);
       view.y = 0;
+      view.alpha = 0;
       this.addChild(view);
       this.hintViews.push(view);
     }
@@ -91,6 +92,27 @@ export class ColumnHintsContainer extends Container {
       if (colHints) {
         this.hintViews[col]?.setHints(colHints);
       }
+    }
+  }
+
+  revealCol(col: number): void {
+    const view = this.hintViews[col];
+    if (!view) return;
+    gsap.killTweensOf(view);
+    gsap.to(view, { alpha: 1, duration: 0.3, ease: 'power2.out' });
+  }
+
+  hideCol(col: number): void {
+    const view = this.hintViews[col];
+    if (!view) return;
+    gsap.killTweensOf(view);
+    gsap.to(view, { alpha: 0, duration: 0.5, ease: 'power2.in' });
+  }
+
+  hideAll(): void {
+    for (const view of this.hintViews) {
+      gsap.killTweensOf(view);
+      view.alpha = 0;
     }
   }
 }

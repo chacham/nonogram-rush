@@ -12,6 +12,7 @@ import { UIOverlay } from '@/views/UIOverlay.js';
 import { FinaleView } from '@/views/FinaleView.js';
 import { ScoringSystem } from '@/systems/ScoringSystem.js';
 import { InputSystem } from '@/systems/InputSystem.js';
+import { HintTokenSystem } from '@/systems/HintTokenSystem.js';
 import { ClearedRowBuffer } from '@/models/ClearedRowBuffer.js';
 import { generateRow, resetRowCounter } from '@/models/RowFactory.js';
 import { validateRow } from '@/utils/HintUtils.js';
@@ -25,6 +26,7 @@ export class Game {
   private finaleView!: FinaleView;
   private scoring: ScoringSystem;
   private input: InputSystem;
+  private hintTokens: HintTokenSystem;
   private buffer: ClearedRowBuffer;
 
   private rows: RowData[] = [];
@@ -38,6 +40,7 @@ export class Game {
     this.sm = createGameStateMachine();
     this.scoring = new ScoringSystem();
     this.input = new InputSystem();
+    this.hintTokens = new HintTokenSystem(GRID_COLS);
     this.buffer = new ClearedRowBuffer();
     this.pushInterval = PUSH_INTERVAL_BASE;
   }
@@ -47,6 +50,7 @@ export class Game {
   async init(): Promise<void> {
     this.setupScene();
     this.setupInput();
+    this.setupHintTokens();
     this.startNewGame();
 
     this.tickHandler = (ticker: Ticker) => this.update(ticker.deltaMS);
@@ -71,6 +75,19 @@ export class Game {
 
     this.finaleView = new FinaleView();
     this.scene.addChild(this.finaleView);
+  }
+
+  private setupHintTokens(): void {
+    this.hintTokens.onRevealCol = (col) => {
+      this.gridContainer.revealColHint(col);
+      this.ui.updateHintTokens(this.hintTokens.tokenCount);
+    };
+    this.hintTokens.onHideCol = (col) => {
+      this.gridContainer.hideColHint(col);
+    };
+    this.hintTokens.onTokensChanged = (count) => {
+      this.ui.updateHintTokens(count);
+    };
   }
 
   private setupInput(): void {
@@ -98,6 +115,7 @@ export class Game {
   private startNewGame(): void {
     this.rows = [];
     this.scoring.reset();
+    this.hintTokens.reset();
     this.buffer.clear();
     resetRowCounter();
     this.pushInterval = PUSH_INTERVAL_BASE;
@@ -106,8 +124,10 @@ export class Game {
 
     this.input.init(GRID_COLS, 0);
     this.gridContainer.setRows(this.rows);
+    this.gridContainer.hideAllColHints();
     this.ui.hideMessage();
     this.ui.updateScore(this.scoring.current);
+    this.ui.updateHintTokens(0);
     this.sm.forceState(GameState.IDLE);
   }
 
@@ -140,6 +160,7 @@ export class Game {
     const newRow = generateRow(GRID_COLS);
     this.rows.push(newRow);
     this.input.updateRowCount(this.rows.length);
+    this.hintTokens.onRowPushed();
     this.shakeScene(4, 0.15);
 
     this.gridContainer.animatePushDown(() => {
@@ -199,6 +220,7 @@ export class Game {
     this.buffer.saveToSession();
 
     const { isCombo } = this.scoring.onLinesCleared(1);
+    this.hintTokens.onRowCleared();
     this.ui.updateScore(this.scoring.current);
 
     if (isCombo) {
