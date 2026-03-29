@@ -218,7 +218,16 @@ export class GridContainer extends Container {
     this.colHints.hideCol(col);
   }
 
+  private _allColHintsVisible = false;
+
+  showAllColHints(): void {
+    if (this._allColHintsVisible) return;
+    this._allColHintsVisible = true;
+    this.colHints.showAll();
+  }
+
   hideAllColHints(): void {
+    this._allColHintsVisible = false;
     this.colHints.hideAll();
   }
 

@@ -115,6 +115,13 @@ export class ColumnHintsContainer extends Container {
       view.alpha = 0;
     }
   }
+
+  showAll(): void {
+    for (const view of this.hintViews) {
+      gsap.killTweensOf(view);
+      gsap.to(view, { alpha: 1, duration: 0.3, ease: 'power2.out' });
+    }
+  }
 }
 
 export class DeadLineView extends Container {
