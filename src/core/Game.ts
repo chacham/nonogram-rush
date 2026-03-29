@@ -248,6 +248,10 @@ export class Game {
 
       this.sm.forceState(GameState.IDLE);
       this.recheckAllRows();
+
+      if (this.playMode === PlayMode.STAGE && this.rowQueue.length === 0) {
+        this.gridContainer.showAllColHints();
+      }
     });
   }
 
