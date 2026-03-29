@@ -19,6 +19,7 @@ import { ClearedRowBuffer } from '@/models/ClearedRowBuffer.js';
 import { generateRow, createRowFromSolution, resetRowCounter } from '@/models/RowFactory.js';
 import { validateRow } from '@/utils/HintUtils.js';
 import { STAGES } from '@/data/stages.js';
+import { loadCustomStages } from '@/data/StageLoader.js';
 
 export class Game {
   private app: Application;
@@ -36,6 +37,7 @@ export class Game {
 
   private rows: RowData[] = [];
   private rowQueue: CellType[][] = [];
+  private allStages: StageData[] = [...STAGES];
   private hearts = MAX_HEARTS;
   private mode: GameMode = GameMode.ASSISTED;
   private playMode: PlayMode = PlayMode.ENDLESS;
@@ -61,6 +63,11 @@ export class Game {
     this.setupScene();
     this.setupInput();
     this.setupHintReveal();
+
+    const custom = await loadCustomStages();
+    this.allStages = [...STAGES, ...custom];
+    this.menuView.setStages(this.allStages);
+
     this.showMenu();
 
     this.tickHandler = (ticker: Ticker) => this.update(ticker.deltaMS);
@@ -87,7 +94,7 @@ export class Game {
     this.scene.addChild(this.finaleView);
 
     this.menuView = new MenuView();
-    this.menuView.onPlayStage = () => this.startGame(PlayMode.STAGE, STAGES[0]);
+    this.menuView.onPlayStage = (stage) => this.startGame(PlayMode.STAGE, stage);
     this.menuView.onPlayEndless = () => this.startGame(PlayMode.ENDLESS);
     this.menuView.onSettings = () => this.showSettings();
     this.app.stage.addChild(this.menuView);

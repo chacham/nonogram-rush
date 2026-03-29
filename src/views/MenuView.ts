@@ -1,11 +1,15 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/config/GameConfig.js';
 import { COLORS } from '@/config/Theme.js';
+import { StageData } from '@/types/index.js';
 
 export class MenuView extends Container {
-  onPlayStage?: () => void;
+  onPlayStage?: (stage: StageData) => void;
   onPlayEndless?: () => void;
   onSettings?: () => void;
+
+  private stageListContainer: Container;
+  private btnStartY: number;
 
   constructor() {
     super();
@@ -21,7 +25,7 @@ export class MenuView extends Container {
     });
     title.anchor.set(0.5);
     title.x = CANVAS_WIDTH / 2;
-    title.y = CANVAS_HEIGHT * 0.22;
+    title.y = CANVAS_HEIGHT * 0.18;
     this.addChild(title);
 
     const subtitle = new Text({
@@ -30,31 +34,56 @@ export class MenuView extends Container {
     });
     subtitle.anchor.set(0.5);
     subtitle.x = CANVAS_WIDTH / 2;
-    subtitle.y = CANVAS_HEIGHT * 0.22 + 52;
+    subtitle.y = CANVAS_HEIGHT * 0.18 + 52;
     this.addChild(subtitle);
 
-    const btnY = CANVAS_HEIGHT * 0.50;
-    const gap = 60;
+    this.btnStartY = CANVAS_HEIGHT * 0.40;
+    this.stageListContainer = new Container();
+    this.addChild(this.stageListContainer);
 
-    this.addButton('STAGE MODE', btnY, COLORS.uiAccent, () => this.onPlayStage?.());
-    this.addButton('ENDLESS MODE', btnY + gap, COLORS.scoreText, () => this.onPlayEndless?.());
-    this.addButton('SETTINGS', btnY + gap * 2, COLORS.hintText, () => this.onSettings?.());
-
-    const hint = new Text({
+    const version = new Text({
       text: 'v0.1',
       style: { fontFamily: 'monospace', fontSize: 12, fill: COLORS.hintTextDim },
     });
-    hint.anchor.set(0.5);
-    hint.x = CANVAS_WIDTH / 2;
-    hint.y = CANVAS_HEIGHT - 30;
-    this.addChild(hint);
+    version.anchor.set(0.5);
+    version.x = CANVAS_WIDTH / 2;
+    version.y = CANVAS_HEIGHT - 30;
+    this.addChild(version);
 
     this.visible = false;
   }
 
-  private addButton(label: string, y: number, color: number, onClick: () => void): void {
-    const btnW = 240;
-    const btnH = 44;
+  setStages(stages: StageData[]): void {
+    this.stageListContainer.removeChildren();
+
+    let y = this.btnStartY;
+    const gap = 48;
+
+    const stagesLabel = new Text({
+      text: 'STAGES',
+      style: { fontFamily: 'monospace', fontSize: 11, fill: COLORS.hintTextDim, letterSpacing: 2 },
+    });
+    stagesLabel.anchor.set(0.5);
+    stagesLabel.x = CANVAS_WIDTH / 2;
+    stagesLabel.y = y - 16;
+    this.stageListContainer.addChild(stagesLabel);
+
+    for (const stage of stages) {
+      const label = `${stage.name}  (${stage.cols}×${stage.rows.length})`;
+      this.addButton(label, y, COLORS.uiAccent, () => this.onPlayStage?.(stage), this.stageListContainer);
+      y += gap;
+    }
+
+    y += 12;
+    this.addButton('ENDLESS MODE', y, COLORS.scoreText, () => this.onPlayEndless?.(), this.stageListContainer);
+    y += gap;
+    this.addButton('SETTINGS', y, COLORS.hintText, () => this.onSettings?.(), this.stageListContainer);
+  }
+
+  private addButton(label: string, y: number, color: number, onClick: () => void, parent?: Container): void {
+    const btnW = 260;
+    const btnH = 40;
+    const target = parent ?? this;
 
     const btn = new Container();
     btn.x = CANVAS_WIDTH / 2;
@@ -71,7 +100,7 @@ export class MenuView extends Container {
 
     const text = new Text({
       text: label,
-      style: { fontFamily: 'monospace', fontSize: 16, fill: color, fontWeight: 'bold' },
+      style: { fontFamily: 'monospace', fontSize: 14, fill: color, fontWeight: 'bold' },
     });
     text.anchor.set(0.5);
     btn.addChild(text);
@@ -93,7 +122,7 @@ export class MenuView extends Container {
     });
 
     btn.on('pointerdown', onClick);
-    this.addChild(btn);
+    target.addChild(btn);
   }
 
   show(): void {

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonogram Rush – Stage Builder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0ff;font-family:'Courier New',monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:24px}
+h1{font-size:24px;color:#00d4ff;margin-bottom:4px}
+.subtitle{font-size:12px;color:#6060aa;margin-bottom:24px}
+.layout{display:flex;gap:32px;flex-wrap:wrap;justify-content:center;width:100%;max-width:1100px}
+.panel{background:#111118;border:1px solid #2a2a4e;border-radius:8px;padding:20px;min-width:280px}
+.panel h2{font-size:14px;color:#00d4ff;margin-bottom:16px;text-transform:uppercase;letter-spacing:1px}
+
+.drop-zone{border:2px dashed #2a2a4e;border-radius:8px;padding:40px 20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:16px}
+.drop-zone:hover,.drop-zone.active{border-color:#00d4ff;background:rgba(0,212,255,.05)}
+.drop-zone p{color:#6060aa;font-size:13px}
+.drop-zone .icon{font-size:32px;margin-bottom:8px;display:block}
+
+label{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:13px;color:#aab}
+label span{min-width:80px}
+input[type=range]{flex:1;margin:0 10px;accent-color:#00d4ff}
+input[type=number],input[type=text]{background:#1a1a2e;border:1px solid #2a2a4e;color:#e0e0ff;padding:4px 8px;border-radius:4px;width:70px;font-family:inherit;font-size:13px;text-align:center}
+input[type=text]{width:100%;text-align:left}
+.val{min-width:32px;text-align:right;color:#00d4ff;font-size:13px}
+
+.checkbox-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;cursor:pointer}
+.checkbox-row input{accent-color:#00d4ff;width:16px;height:16px}
+
+.preview-area{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.preview-box{text-align:center}
+.preview-box p{font-size:11px;color:#6060aa;margin-bottom:6px}
+canvas{border:1px solid #2a2a4e;border-radius:4px;image-rendering:pixelated;display:block}
+
+.grid-preview{margin-top:16px;display:flex;justify-content:center}
+.grid-preview canvas{image-rendering:pixelated}
+
+.btn{display:inline-block;padding:10px 24px;background:#1a1a2e;border:1.5px solid #00d4ff;color:#00d4ff;border-radius:6px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:bold;transition:background .2s;margin-top:16px}
+.btn:hover{background:rgba(0,212,255,.15)}
+.btn:disabled{opacity:.3;cursor:default}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap}
+.info{font-size:11px;color:#6060aa;margin-top:8px}
+</style>
+</head>
+<body>
+
+<h1>STAGE BUILDER</h1>
+<p class="subtitle">Convert image to Nonogram Rush stage</p>
+
+<div class="layout">
+
+<div class="panel" style="flex:1;max-width:400px">
+  <h2>Input</h2>
+
+  <div class="drop-zone" id="dropZone">
+    <span class="icon">&#128444;</span>
+    <p>Drop image here or click to select</p>
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+  </div>
+
+  <label><span>Name</span><input type="text" id="stageName" value="custom" placeholder="stage name"></label>
+  <label><span>Columns</span><input type="number" id="cols" value="10" min="3" max="30"></label>
+  <label><span>Rows</span><input type="number" id="rows" value="0" min="0" max="50"><span class="info" style="margin:0 0 0 8px">0 = auto</span></label>
+  <label><span>Threshold</span><input type="range" id="threshold" min="0" max="255" value="128"><span class="val" id="thresholdVal">128</span></label>
+
+  <label class="checkbox-row"><input type="checkbox" id="invert"><span>Invert (dark = empty)</span></label>
+
+  <div class="preview-area">
+    <div class="preview-box"><p>Original</p><canvas id="origCanvas" width="0" height="0"></canvas></div>
+    <div class="preview-box"><p>Processed</p><canvas id="procCanvas" width="0" height="0"></canvas></div>
+  </div>
+</div>
+
+<div class="panel" style="flex:1;max-width:600px">
+  <h2>Preview</h2>
+  <div class="grid-preview"><canvas id="gridCanvas" width="0" height="0"></canvas></div>
+  <p class="info" id="gridInfo"></p>
+
+  <div class="btn-row">
+    <button class="btn" id="downloadBtn" disabled>Download JSON</button>
+  </div>
+  <p class="info" id="outputInfo"></p>
+</div>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const dropZone = $('dropZone');
+const fileInput = $('fileInput');
+const origCanvas = $('origCanvas');
+const procCanvas = $('procCanvas');
+const gridCanvas = $('gridCanvas');
+const downloadBtn = $('downloadBtn');
+
+let sourceImage = null;
+let currentGrid = null;
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('active'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('active');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) loadFile(file);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) loadFile(fileInput.files[0]);
+});
+
+$('cols').addEventListener('input', process);
+$('rows').addEventListener('input', process);
+$('threshold').addEventListener('input', () => { $('thresholdVal').textContent = $('threshold').value; process(); });
+$('invert').addEventListener('change', process);
+
+function loadFile(file) {
+  const img = new Image();
+  img.onload = () => { sourceImage = img; process(); };
+  img.src = URL.createObjectURL(file);
+}
+
+function process() {
+  if (!sourceImage) return;
+
+  const cols = Math.max(3, parseInt($('cols').value) || 10);
+  let rows = parseInt($('rows').value) || 0;
+  if (rows <= 0) {
+    rows = Math.max(1, Math.round(cols * (sourceImage.height / sourceImage.width)));
+  }
+
+  const previewScale = Math.min(150 / cols, 150 / rows, 20);
+  const pw = cols * previewScale;
+  const ph = rows * previewScale;
+
+  origCanvas.width = pw; origCanvas.height = ph;
+  const octx = origCanvas.getContext('2d');
+  octx.imageSmoothingEnabled = true;
+  octx.drawImage(sourceImage, 0, 0, pw, ph);
+
+  const workCanvas = document.createElement('canvas');
+  workCanvas.width = cols; workCanvas.height = rows;
+  const wctx = workCanvas.getContext('2d');
+  wctx.imageSmoothingEnabled = true;
+  wctx.drawImage(sourceImage, 0, 0, cols, rows);
+  const imgData = wctx.getImageData(0, 0, cols, rows);
+
+  const threshold = parseInt($('threshold').value);
+  const invert = $('invert').checked;
+  const grid = [];
+
+  for (let r = 0; r < rows; r++) {
+    const row = [];
+    for (let c = 0; c < cols; c++) {
+      const i = (r * cols + c) * 4;
+      const gray = imgData.data[i] * 0.299 + imgData.data[i+1] * 0.587 + imgData.data[i+2] * 0.114;
+      const alpha = imgData.data[i+3] / 255;
+      const effective = gray * alpha + 255 * (1 - alpha);
+      let filled = effective < threshold;
+      if (invert) filled = !filled;
+      row.push(filled ? 1 : 0);
+    }
+    grid.push(row);
+  }
+
+  procCanvas.width = pw; procCanvas.height = ph;
+  const pctx = procCanvas.getContext('2d');
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      pctx.fillStyle = grid[r][c] ? '#00d4ff' : '#1a1a2e';
+      pctx.fillRect(c * previewScale, r * previewScale, previewScale, previewScale);
+    }
+  }
+
+  const cellSize = Math.min(Math.floor(500 / cols), Math.floor(500 / rows), 40);
+  const gap = cellSize > 8 ? 1 : 0;
+  const gw = cols * (cellSize + gap) - gap;
+  const gh = rows * (cellSize + gap) - gap;
+  gridCanvas.width = gw; gridCanvas.height = gh;
+  const gctx = gridCanvas.getContext('2d');
+  gctx.fillStyle = '#111118';
+  gctx.fillRect(0, 0, gw, gh);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      gctx.fillStyle = grid[r][c] ? '#00d4ff' : '#1a1a2e';
+      gctx.fillRect(c * (cellSize + gap), r * (cellSize + gap), cellSize, cellSize);
+    }
+  }
+
+  const filledCount = grid.flat().filter(v => v === 1).length;
+  const totalCount = cols * rows;
+  $('gridInfo').textContent = `${cols} × ${rows}  |  ${filledCount}/${totalCount} filled (${Math.round(filledCount/totalCount*100)}%)`;
+
+  currentGrid = grid;
+  downloadBtn.disabled = false;
+
+  const name = $('stageName').value.trim() || 'custom';
+  $('outputInfo').textContent = `→ ${name}.json`;
+}
+
+downloadBtn.addEventListener('click', () => {
+  if (!currentGrid) return;
+  const name = $('stageName').value.trim() || 'custom';
+  const cols = parseInt($('cols').value) || 10;
+  const data = {
+    id: name.toLowerCase().replace(/\s+/g, '-'),
+    name: name,
+    cols: cols,
+    rows: currentGrid,
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = data.id + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
