@@ -5,10 +5,11 @@ import {
   CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH,
   GRID_COLS, GRID_VISIBLE_ROWS, GRID_WIDTH,
   COL_HINT_AREA_HEIGHT, PUSH_ANIMATION_DURATION,
+  COL_HINT_VISIBLE_THRESHOLD,
 } from '@/config/GameConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import { ColumnHintsContainer, DeadLineView } from './HintViews.js';
-import { calculateColumnHints } from '@/utils/HintUtils.js';
+import { calculateColumnHintsWithBoundary } from '@/utils/HintUtils.js';
 import gsap from 'gsap';
 
 const ROW_HEIGHT = CELL_SIZE + CELL_GAP;
@@ -219,6 +220,20 @@ export class GridContainer extends Container {
   }
 
   private _allColHintsVisible = false;
+  private _visibleRowCount = 0;
+
+  setVisibleRowCount(count: number): void {
+    this._visibleRowCount = count;
+    const shouldShow = count > COL_HINT_VISIBLE_THRESHOLD;
+    if (shouldShow && !this._allColHintsVisible) {
+      this._allColHintsVisible = true;
+      this.colHints.showAll();
+    } else if (!shouldShow && this._allColHintsVisible) {
+      this._allColHintsVisible = false;
+      this.colHints.hideAll();
+    }
+    this.updateColHints();
+  }
 
   showAllColHints(): void {
     if (this._allColHintsVisible) return;
@@ -232,10 +247,14 @@ export class GridContainer extends Container {
   }
 
   private updateColHints(): void {
-    const activeCells = this._rows
+    const activeSolutions = this._rows
       .filter(r => !r.cleared)
       .map(r => r.solution);
-    const hints = calculateColumnHints(activeCells, this.cols);
+
+    const visibleCount = Math.min(this._visibleRowCount, activeSolutions.length);
+    const hiddenCount = activeSolutions.length - visibleCount;
+
+    const hints = calculateColumnHintsWithBoundary(activeSolutions, hiddenCount, this.cols);
     this.colHints.update(hints);
   }
 

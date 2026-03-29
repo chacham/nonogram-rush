@@ -50,3 +50,33 @@ export function calculateColumnHints(
   }
   return result;
 }
+
+export function calculateColumnHintsWithBoundary(
+  rows: number[][],
+  hiddenCount: number,
+  colCount: number
+): HintSegment[][] {
+  const result: HintSegment[][] = [];
+  for (let col = 0; col < colCount; col++) {
+    let boundaryCount = 0;
+    for (let i = hiddenCount - 1; i >= 0; i--) {
+      if ((rows[i]?.[col] ?? 0) === 1) {
+        boundaryCount++;
+      } else {
+        break;
+      }
+    }
+
+    const visibleCells = rows
+      .slice(hiddenCount)
+      .map(row => (row[col] ?? 0) === 1 ? CellState.FILLED : CellState.EMPTY);
+
+    const fullColumn: CellState[] = [
+      ...Array(boundaryCount).fill(CellState.FILLED),
+      ...visibleCells,
+    ];
+
+    result.push(calculateHints(fullColumn));
+  }
+  return result;
+}

@@ -31,4 +31,6 @@ export const HINT_CLEAR_INTERVAL = 3;
 export const HINT_REVEAL_DURATION_MS = 10000;
 export const HINT_PUSH_INTERVAL = 3;
 
+export const COL_HINT_VISIBLE_THRESHOLD = 4;
+
 export const SESSION_STORAGE_KEY = 'nonogram-rush-cleared-rows';

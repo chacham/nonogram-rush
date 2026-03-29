@@ -147,9 +147,7 @@ export class Game {
       const dangerRows = Math.max(0, this.rows.length - (GRID_VISIBLE_ROWS - 3));
       this.gridContainer.setDangerLevel(dangerRows);
 
-      if (this.rows.length > 7) {
-        this.gridContainer.showAllColHints();
-      }
+      this.gridContainer.setVisibleRowCount(this.rows.length);
 
       if (this.pushTimer >= this.pushInterval) {
         this.pushTimer = 0;
