@@ -5,7 +5,7 @@ import {
   PUSH_INTERVAL_BASE, PUSH_INTERVAL_MIN, PUSH_INTERVAL_SCALE,
   STAGE_GOAL_LINES, COMBO_FREEZE_DURATION, MAX_HEARTS,
 } from '@/config/GameConfig.js';
-import { GameState, GameMode, CellState, CellType, RowData } from '@/types/index.js';
+import { GameState, GameMode, PlayMode, CellState, CellType, RowData, StageData } from '@/types/index.js';
 import { StateMachine, createGameStateMachine } from '@/core/StateMachine.js';
 import { GridContainer } from '@/views/GridContainer.js';
 import { UIOverlay } from '@/views/UIOverlay.js';
@@ -13,7 +13,7 @@ import { FinaleView } from '@/views/FinaleView.js';
 import { ScoringSystem } from '@/systems/ScoringSystem.js';
 import { InputSystem } from '@/systems/InputSystem.js';
 import { ColHintRevealSystem } from '@/systems/ColHintRevealSystem.js';import { ClearedRowBuffer } from '@/models/ClearedRowBuffer.js';
-import { generateRow, resetRowCounter } from '@/models/RowFactory.js';
+import { generateRow, createRowFromSolution, resetRowCounter } from '@/models/RowFactory.js';
 import { validateRow } from '@/utils/HintUtils.js';
 
 export class Game {
@@ -29,8 +29,11 @@ export class Game {
   private buffer: ClearedRowBuffer;
 
   private rows: RowData[] = [];
+  private rowQueue: CellType[][] = [];
   private hearts = MAX_HEARTS;
   private mode: GameMode = GameMode.ASSISTED;
+  private playMode: PlayMode = PlayMode.ENDLESS;
+  private stageData?: StageData;
   private pushTimer = 0;
   private pushInterval: number;
   private freezeTimer = 0;
@@ -48,7 +51,9 @@ export class Game {
 
   private tickHandler!: (ticker: Ticker) => void;
 
-  async init(): Promise<void> {
+  async init(playMode: PlayMode = PlayMode.ENDLESS, stageData?: StageData): Promise<void> {
+    this.playMode = playMode;
+    this.stageData = stageData;
     this.setupScene();
     this.setupInput();
     this.setupHintReveal();
@@ -111,6 +116,7 @@ export class Game {
 
   private startNewGame(): void {
     this.rows = [];
+    this.rowQueue = this.stageData ? [...this.stageData.rows] : [];
     this.hearts = MAX_HEARTS;
     this.scoring.reset();
     this.hintReveal.reset();
@@ -139,11 +145,17 @@ export class Game {
         return;
       }
 
+      this.gridContainer.setVisibleRowCount(this.rows.length);
+
+      const shouldPush = this.playMode === PlayMode.ENDLESS || this.rowQueue.length > 0;
+      if (!shouldPush) {
+        this.ui.updatePushTimer(0);
+        return;
+      }
+
       this.pushTimer += deltaMS;
       this.pushInterval = this.calcPushInterval(this.rows.length);
       this.ui.updatePushTimer(this.pushTimer / this.pushInterval);
-
-      this.gridContainer.setVisibleRowCount(this.rows.length);
 
       if (this.pushTimer >= this.pushInterval) {
         this.pushTimer = 0;
@@ -155,7 +167,18 @@ export class Game {
   private triggerRowPush(): void {
     if (!this.sm.transition(GameState.PUSHING)) return;
 
-    const newRow = generateRow(GRID_COLS);
+    let newRow: RowData;
+    if (this.playMode === PlayMode.STAGE) {
+      const solution = this.rowQueue.pop();
+      if (!solution) {
+        this.sm.forceState(GameState.IDLE);
+        return;
+      }
+      newRow = createRowFromSolution(solution);
+    } else {
+      newRow = generateRow(GRID_COLS);
+    }
+
     this.rows.push(newRow);
     this.input.updateRowCount(this.rows.length);
     this.hintReveal.onRowPushed();
@@ -262,9 +285,14 @@ export class Game {
 
     this.gridContainer.animateClearRows([rowIndex], () => {
       this.rows = this.rows.filter((_, i) => i !== rowIndex);
-      const linesCleared = this.scoring.current.linesCleared;
 
-      if (linesCleared >= STAGE_GOAL_LINES) {
+      const stageComplete = this.playMode === PlayMode.STAGE
+        && this.rowQueue.length === 0
+        && this.rows.length === 0;
+      const endlessGoalReached = this.playMode === PlayMode.ENDLESS
+        && this.scoring.current.linesCleared >= STAGE_GOAL_LINES;
+
+      if (stageComplete || endlessGoalReached) {
         this.sm.forceState(GameState.FINALE);
         this.ui.showStageClear();
         setTimeout(() => this.showFinale(), 1500);

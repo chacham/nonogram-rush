@@ -27,6 +27,18 @@ export enum GameMode {
   NORMAL = 'NORMAL',
 }
 
+export enum PlayMode {
+  STAGE = 'STAGE',
+  ENDLESS = 'ENDLESS',
+}
+
+export interface StageData {
+  id: string;
+  name: string;
+  cols: number;
+  rows: CellType[][];
+}
+
 export enum GameState {
   IDLE = 'IDLE',
   PUSHING = 'PUSHING',

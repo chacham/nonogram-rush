@@ -31,6 +31,20 @@ export function generateRow(cols: number = GRID_COLS, fillRatio: number = ROW_FI
   };
 }
 
+export function createRowFromSolution(solution: CellType[]): RowData {
+  const solutionAsStates = solutionToCellStates(solution);
+  const hints = calculateHints(solutionAsStates);
+  const cells = new Array<CellState>(solution.length).fill(CellState.EMPTY);
+
+  return {
+    solution,
+    hints,
+    cells,
+    cleared: false,
+    originalIndex: rowCounter++,
+  };
+}
+
 export function resetRowCounter(): void {
   rowCounter = 0;
 }
