@@ -19,7 +19,6 @@ export class UIOverlay extends Container {
   private levelText: Text;
   private comboText: Text;
   private linesText: Text;
-  private hintTokenText: Text;
   private messageText: Text;
   private panelBg: Graphics;
   private timerBarBg: Graphics;
@@ -41,7 +40,6 @@ export class UIOverlay extends Container {
     this.levelText = this.makeText('LV 1', 15, COLORS.uiAccent);
     this.comboText = this.makeText('', 17, COLORS.comboText);
     this.linesText = this.makeText('LINES: 0', 14, COLORS.uiText);
-    this.hintTokenText = this.makeText('', 13, COLORS.hintText);
     this.messageText = this.makeText('', 24, COLORS.gameOverText);
 
     this.layoutElements();
@@ -80,10 +78,7 @@ export class UIOverlay extends Container {
     this.linesText.y = y; y += lineH;
 
     this.comboText.x = PANEL_X;
-    this.comboText.y = y; y += lineH;
-
-    this.hintTokenText.x = PANEL_X;
-    this.hintTokenText.y = y;
+    this.comboText.y = y;
 
     this.messageText.x = HINT_AREA_WIDTH + GRID_WIDTH / 2;
     this.messageText.y = CANVAS_HEIGHT / 2;
@@ -116,10 +111,6 @@ export class UIOverlay extends Container {
 
   updatePushTimer(progress: number): void {
     this.drawTimerBar(progress);
-  }
-
-  updateHintTokens(count: number): void {
-    this.hintTokenText.text = count > 0 ? `HINT x${count}` : '';
   }
 
   updateScore(state: ScoreState): void {
