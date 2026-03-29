@@ -359,6 +359,7 @@ export class Game {
       this.input.updateRowCount(this.rows.length);
 
       this.sm.forceState(GameState.IDLE);
+      this.recheckAllRows();
     });
   }
 
