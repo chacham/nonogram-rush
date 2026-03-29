@@ -1,11 +1,11 @@
-import { CellState } from '@/types/index.js';
+import { CellState, KeyBindings } from '@/types/index.js';
 import { GridContainer } from '@/views/GridContainer.js';
+import { loadBindings } from '@/systems/KeyBindingsManager.js';
 
 type DragMode = 'fill' | 'cross' | null;
 
 export class InputSystem {
-  private fillKey = 'KeyF';
-  private crossKey = 'KeyX';
+  private bindings: KeyBindings;
   private cursorRow = 0;
   private cursorCol = 0;
   private dragMode: DragMode = null;
@@ -17,6 +17,18 @@ export class InputSystem {
 
   private totalRows = 0;
   private totalCols = 0;
+
+  constructor() {
+    this.bindings = loadBindings();
+  }
+
+  reloadBindings(): void {
+    this.bindings = loadBindings();
+  }
+
+  getBindings(): KeyBindings {
+    return { ...this.bindings };
+  }
 
   init(cols: number, rows: number): void {
     this.totalCols = cols;
@@ -63,29 +75,24 @@ export class InputSystem {
   }
 
   private handleKey(e: KeyboardEvent): void {
-    switch (e.code) {
-      case 'ArrowUp':
-        e.preventDefault();
-        this.moveCursor(-1, 0);
-        break;
-      case 'ArrowDown':
-        e.preventDefault();
-        this.moveCursor(1, 0);
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        this.moveCursor(0, -1);
-        break;
-      case 'ArrowRight':
-        e.preventDefault();
-        this.moveCursor(0, 1);
-        break;
-      case this.fillKey:
-        this.triggerMark(CellState.FILLED);
-        break;
-      case this.crossKey:
-        this.triggerMark(CellState.CROSSED);
-        break;
+    const code = e.code;
+
+    if (code === this.bindings.up) {
+      e.preventDefault();
+      this.moveCursor(-1, 0);
+    } else if (code === this.bindings.down) {
+      e.preventDefault();
+      this.moveCursor(1, 0);
+    } else if (code === this.bindings.left) {
+      e.preventDefault();
+      this.moveCursor(0, -1);
+    } else if (code === this.bindings.right) {
+      e.preventDefault();
+      this.moveCursor(0, 1);
+    } else if (code === this.bindings.fill) {
+      this.triggerMark(CellState.FILLED);
+    } else if (code === this.bindings.cross) {
+      this.triggerMark(CellState.CROSSED);
     }
   }
 

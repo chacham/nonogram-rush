@@ -5,10 +5,11 @@ import {
 import {
   HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT,
   UI_PANEL_WIDTH, TIMER_BAR_HEIGHT,
-  UI_FONT_SIZE_LARGE, UI_FONT_SIZE_MEDIUM, UI_FONT_SIZE_MESSAGE, UI_LINE_HEIGHT,
+  UI_FONT_SIZE_LARGE, UI_FONT_SIZE_MEDIUM, UI_FONT_SIZE_SMALL, UI_FONT_SIZE_MESSAGE, UI_LINE_HEIGHT,
 } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
-import { ScoreState } from '@/types/index.js';
+import { ScoreState, KeyBindings } from '@/types/index.js';
+import { keyCodeToLabel } from '@/systems/KeyBindingsManager.js';
 
 const PANEL_X = HINT_AREA_WIDTH + GRID_WIDTH + 12;
 const PANEL_INNER_W = UI_PANEL_WIDTH - 20;
@@ -22,6 +23,7 @@ export class UIOverlay extends Container {
   private comboText: Text;
   private linesText: Text;
   private heartsText: Text;
+  private keysText: Text;
   private messageText: Text;
   private panelBg: Graphics;
   private timerBarBg: Graphics;
@@ -44,6 +46,7 @@ export class UIOverlay extends Container {
     this.comboText = this.makeText('', UI_FONT_SIZE_LARGE, COLORS.comboText);
     this.linesText = this.makeText('LINES: 0', UI_FONT_SIZE_MEDIUM, COLORS.uiText);
     this.heartsText = this.makeText('', UI_FONT_SIZE_LARGE, COLORS.heartFull);
+    this.keysText = this.makeText('', UI_FONT_SIZE_SMALL, COLORS.hintTextDim);
     this.messageText = this.makeText('', UI_FONT_SIZE_MESSAGE, COLORS.gameOverText);
 
     this.layoutElements();
@@ -84,7 +87,10 @@ export class UIOverlay extends Container {
     this.comboText.y = y; y += UI_LINE_HEIGHT;
 
     this.heartsText.x = PANEL_X;
-    this.heartsText.y = y;
+    this.heartsText.y = y; y += UI_LINE_HEIGHT + 12;
+
+    this.keysText.x = PANEL_X;
+    this.keysText.y = y;
 
     this.messageText.x = HINT_AREA_WIDTH + GRID_WIDTH / 2;
     this.messageText.y = CANVAS_HEIGHT / 2;
@@ -143,10 +149,25 @@ export class UIOverlay extends Container {
   }
 
   showGameOver(): void {
-    this.showMessage('GAME OVER\n[R] to restart', COLORS.gameOverText);
+    this.showMessage('GAME OVER\n[R] to restart\n[ESC] menu', COLORS.gameOverText);
   }
 
   showStageClear(): void {
     this.showMessage('STAGE CLEAR!\nPreparing finale...', COLORS.scoreText);
+  }
+
+  updateKeys(bindings: KeyBindings): void {
+    const u = keyCodeToLabel(bindings.up);
+    const d = keyCodeToLabel(bindings.down);
+    const l = keyCodeToLabel(bindings.left);
+    const r = keyCodeToLabel(bindings.right);
+    const f = keyCodeToLabel(bindings.fill);
+    const x = keyCodeToLabel(bindings.cross);
+    this.keysText.text =
+      `KEYS\n` +
+      `${u}${d}${l}${r}  Move\n` +
+      `${f}    Fill\n` +
+      `${x}    Cross\n` +
+      `ESC  Menu`;
   }
 }

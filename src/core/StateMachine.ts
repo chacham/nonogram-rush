@@ -47,11 +47,13 @@ export class StateMachine {
 }
 
 export function createGameStateMachine(): StateMachine {
-  return new StateMachine(GameState.IDLE, {
-    [GameState.IDLE]: [GameState.PUSHING, GameState.CLEARING, GameState.GAME_OVER, GameState.FINALE],
+  return new StateMachine(GameState.MENU, {
+    [GameState.MENU]: [GameState.IDLE, GameState.SETTINGS],
+    [GameState.SETTINGS]: [GameState.MENU],
+    [GameState.IDLE]: [GameState.PUSHING, GameState.CLEARING, GameState.GAME_OVER, GameState.FINALE, GameState.MENU],
     [GameState.PUSHING]: [GameState.IDLE, GameState.GAME_OVER],
     [GameState.CLEARING]: [GameState.IDLE],
-    [GameState.GAME_OVER]: [GameState.IDLE],
-    [GameState.FINALE]: [GameState.IDLE],
+    [GameState.GAME_OVER]: [GameState.IDLE, GameState.MENU],
+    [GameState.FINALE]: [GameState.IDLE, GameState.MENU],
   });
 }

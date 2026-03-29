@@ -40,11 +40,22 @@ export interface StageData {
 }
 
 export enum GameState {
+  MENU = 'MENU',
+  SETTINGS = 'SETTINGS',
   IDLE = 'IDLE',
   PUSHING = 'PUSHING',
   CLEARING = 'CLEARING',
   GAME_OVER = 'GAME_OVER',
   FINALE = 'FINALE',
+}
+
+export interface KeyBindings {
+  fill: string;
+  cross: string;
+  up: string;
+  down: string;
+  left: string;
+  right: string;
 }
 
 export interface ScoreState {

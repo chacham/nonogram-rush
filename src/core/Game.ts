@@ -10,11 +10,15 @@ import { StateMachine, createGameStateMachine } from '@/core/StateMachine.js';
 import { GridContainer } from '@/views/GridContainer.js';
 import { UIOverlay } from '@/views/UIOverlay.js';
 import { FinaleView } from '@/views/FinaleView.js';
+import { MenuView } from '@/views/MenuView.js';
+import { SettingsView } from '@/views/SettingsView.js';
 import { ScoringSystem } from '@/systems/ScoringSystem.js';
 import { InputSystem } from '@/systems/InputSystem.js';
-import { ColHintRevealSystem } from '@/systems/ColHintRevealSystem.js';import { ClearedRowBuffer } from '@/models/ClearedRowBuffer.js';
+import { ColHintRevealSystem } from '@/systems/ColHintRevealSystem.js';
+import { ClearedRowBuffer } from '@/models/ClearedRowBuffer.js';
 import { generateRow, createRowFromSolution, resetRowCounter } from '@/models/RowFactory.js';
 import { validateRow } from '@/utils/HintUtils.js';
+import { STAGES } from '@/data/stages.js';
 
 export class Game {
   private app: Application;
@@ -23,6 +27,8 @@ export class Game {
   private gridContainer!: GridContainer;
   private ui!: UIOverlay;
   private finaleView!: FinaleView;
+  private menuView!: MenuView;
+  private settingsView!: SettingsView;
   private scoring: ScoringSystem;
   private input: InputSystem;
   private hintReveal: ColHintRevealSystem;
@@ -51,13 +57,11 @@ export class Game {
 
   private tickHandler!: (ticker: Ticker) => void;
 
-  async init(playMode: PlayMode = PlayMode.ENDLESS, stageData?: StageData): Promise<void> {
-    this.playMode = playMode;
-    this.stageData = stageData;
+  async init(): Promise<void> {
     this.setupScene();
     this.setupInput();
     this.setupHintReveal();
-    this.startNewGame();
+    this.showMenu();
 
     this.tickHandler = (ticker: Ticker) => this.update(ticker.deltaMS);
     this.app.ticker.add(this.tickHandler);
@@ -81,6 +85,20 @@ export class Game {
 
     this.finaleView = new FinaleView();
     this.scene.addChild(this.finaleView);
+
+    this.menuView = new MenuView();
+    this.menuView.onPlayStage = () => this.startGame(PlayMode.STAGE, STAGES[0]);
+    this.menuView.onPlayEndless = () => this.startGame(PlayMode.ENDLESS);
+    this.menuView.onSettings = () => this.showSettings();
+    this.app.stage.addChild(this.menuView);
+
+    this.settingsView = new SettingsView();
+    this.settingsView.onBack = () => this.showMenu();
+    this.settingsView.onChange = () => {
+      this.input.reloadBindings();
+      this.ui.updateKeys(this.input.getBindings());
+    };
+    this.app.stage.addChild(this.settingsView);
   }
 
   private setupHintReveal(): void {
@@ -97,7 +115,8 @@ export class Game {
     this.input.bindDragOnGrid(this.gridContainer);
 
     this.input.onCellMark = (row, col, state) => {
-      if (this.sm.current === GameState.GAME_OVER || this.sm.current === GameState.FINALE) return;
+      if (this.sm.current !== GameState.IDLE && this.sm.current !== GameState.PUSHING
+        && this.sm.current !== GameState.CLEARING) return;
       this.handleCellMark(row, col, state);
     };
 
@@ -106,6 +125,15 @@ export class Game {
     };
 
     window.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape') {
+        if (this.settingsView.isListening) return;
+        if (this.sm.current === GameState.SETTINGS) {
+          this.showMenu();
+        } else if (this.sm.current !== GameState.MENU) {
+          this.showMenu();
+        }
+        return;
+      }
       if (e.code === 'KeyR' && this.sm.current === GameState.GAME_OVER) {
         this.startNewGame();
       }
@@ -132,7 +160,31 @@ export class Game {
     this.ui.hideMessage();
     this.ui.updateScore(this.scoring.current);
     this.ui.updateHearts(this.hearts);
+    this.ui.updateKeys(this.input.getBindings());
     this.sm.forceState(GameState.IDLE);
+  }
+
+  private showMenu(): void {
+    this.scene.visible = false;
+    this.settingsView.hide();
+    this.menuView.show();
+    this.sm.forceState(GameState.MENU);
+  }
+
+  private showSettings(): void {
+    this.menuView.hide();
+    this.settingsView.show();
+    this.sm.forceState(GameState.SETTINGS);
+  }
+
+  private startGame(playMode: PlayMode, stageData?: StageData): void {
+    this.playMode = playMode;
+    this.stageData = stageData;
+    this.menuView.hide();
+    this.settingsView.hide();
+    this.scene.visible = true;
+    this.input.reloadBindings();
+    this.startNewGame();
   }
 
   private update(deltaMS: number): void {
@@ -328,7 +380,7 @@ export class Game {
     this.ui.hideMessage();
     this.finaleView.show(this.buffer.getAll(), () => {
       this.finaleView.hide();
-      this.startNewGame();
+      this.showMenu();
     });
   }
 
