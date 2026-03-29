@@ -59,9 +59,13 @@ export class GridContainer extends Container {
     this.gridBg.fill({ color: COLORS.gridBackground });
 
     for (let col = 0; col < this.cols; col++) {
-      const x = HINT_AREA_WIDTH + col * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2;
-      this.gridBg.moveTo(x, COL_HINT_AREA_HEIGHT);
-      this.gridBg.lineTo(x, COL_HINT_AREA_HEIGHT + gridH);
+      const left = HINT_AREA_WIDTH + col * (CELL_SIZE + CELL_GAP);
+      const right = left + CELL_SIZE;
+      this.gridBg.moveTo(left, COL_HINT_AREA_HEIGHT);
+      this.gridBg.lineTo(left, COL_HINT_AREA_HEIGHT + gridH);
+      this.gridBg.stroke({ color: COLORS.gridGuide, width: 1, alpha: 0.15 });
+      this.gridBg.moveTo(right, COL_HINT_AREA_HEIGHT);
+      this.gridBg.lineTo(right, COL_HINT_AREA_HEIGHT + gridH);
       this.gridBg.stroke({ color: COLORS.gridGuide, width: 1, alpha: 0.15 });
     }
 
