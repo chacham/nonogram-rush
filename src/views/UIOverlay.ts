@@ -1,6 +1,6 @@
 import { Container, Text, Graphics } from 'pixi.js';
 import {
-  CANVAS_HEIGHT, GRID_WIDTH, GRID_HEIGHT,
+  CANVAS_HEIGHT, GRID_WIDTH, GRID_HEIGHT, MAX_HEARTS,
 } from '@/config/GameConfig.js';
 import {
   HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT,
@@ -21,6 +21,7 @@ export class UIOverlay extends Container {
   private levelText: Text;
   private comboText: Text;
   private linesText: Text;
+  private heartsText: Text;
   private messageText: Text;
   private panelBg: Graphics;
   private timerBarBg: Graphics;
@@ -42,6 +43,7 @@ export class UIOverlay extends Container {
     this.levelText = this.makeText('LV 1', UI_FONT_SIZE_LARGE, COLORS.uiAccent);
     this.comboText = this.makeText('', UI_FONT_SIZE_LARGE, COLORS.comboText);
     this.linesText = this.makeText('LINES: 0', UI_FONT_SIZE_MEDIUM, COLORS.uiText);
+    this.heartsText = this.makeText('', UI_FONT_SIZE_LARGE, COLORS.heartFull);
     this.messageText = this.makeText('', UI_FONT_SIZE_MESSAGE, COLORS.gameOverText);
 
     this.layoutElements();
@@ -79,7 +81,10 @@ export class UIOverlay extends Container {
     this.linesText.y = y; y += UI_LINE_HEIGHT;
 
     this.comboText.x = PANEL_X;
-    this.comboText.y = y;
+    this.comboText.y = y; y += UI_LINE_HEIGHT;
+
+    this.heartsText.x = PANEL_X;
+    this.heartsText.y = y;
 
     this.messageText.x = HINT_AREA_WIDTH + GRID_WIDTH / 2;
     this.messageText.y = CANVAS_HEIGHT / 2;
@@ -112,6 +117,12 @@ export class UIOverlay extends Container {
 
   updatePushTimer(progress: number): void {
     this.drawTimerBar(progress);
+  }
+
+  updateHearts(current: number): void {
+    const full = '\u2665';
+    const empty = '\u2661';
+    this.heartsText.text = full.repeat(current) + empty.repeat(MAX_HEARTS - current);
   }
 
   updateScore(state: ScoreState): void {

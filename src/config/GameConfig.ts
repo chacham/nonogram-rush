@@ -23,6 +23,8 @@ export const LEVEL_UP_LINES = 10;
 
 export const STAGE_GOAL_LINES = 30;
 
+export const MAX_HEARTS = 5;
+
 export const ROW_FILL_RATIO = 0.5;
 
 export const SESSION_STORAGE_KEY = 'nonogram-rush-cleared-rows';

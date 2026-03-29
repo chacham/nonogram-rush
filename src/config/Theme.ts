@@ -10,6 +10,8 @@ export const COLORS = {
   hintText: 0xe0e0ff,
   hintTextDim: 0x6060aa,
   cursorHighlight: 0xffdd00,
+  heartFull: 0xff3366,
+  heartEmpty: 0x333355,
   deadLineGlow: 0xff6600,
   rowClearFlash: 0xffffff,
   uiText: 0xe0e0ff,
