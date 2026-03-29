@@ -121,13 +121,16 @@ export class GridContainer extends Container {
     this.rowViews = [];
 
     const count = Math.min(this._rows.length, this.visibleRows);
+    const bottomVisualIndex = this.visibleRows - 1;
+
     for (let i = 0; i < count; i++) {
       const dataIndex = this._rows.length - count + i;
       const rowData = this._rows[dataIndex];
       if (!rowData) continue;
       const view = this.acquireRowView();
       view.bind(rowData, dataIndex);
-      view.y = this.getRowY(i);
+      const visualIndex = bottomVisualIndex - (count - 1) + i;
+      view.y = this.getRowY(visualIndex);
       this.addChild(view);
       this.rowViews.push(view);
     }
