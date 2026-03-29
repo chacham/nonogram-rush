@@ -1,4 +1,4 @@
-import { Container, Text, Graphics } from 'pixi.js';
+import { Container, Text } from 'pixi.js';
 import { HintSegment } from '@/types/index.js';
 import { CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT } from '@/config/GameConfig.js';
 import { COLORS } from '@/config/Theme.js';
@@ -120,50 +120,6 @@ export class ColumnHintsContainer extends Container {
     for (const view of this.hintViews) {
       gsap.killTweensOf(view);
       gsap.to(view, { alpha: 1, duration: 0.3, ease: 'power2.out' });
-    }
-  }
-}
-
-export class DeadLineView extends Container {
-  private line: Graphics;
-  private _dangerTween: gsap.core.Tween | null = null;
-  private _width: number;
-
-  constructor(width: number) {
-    super();
-    this._width = width;
-    this.line = new Graphics();
-    this.addChild(this.line);
-    this.draw(1, 0.8);
-  }
-
-  private draw(lineWidth: number, alpha: number): void {
-    this.line.clear();
-    this.line.moveTo(0, 0);
-    this.line.lineTo(this._width, 0);
-    this.line.stroke({ color: COLORS.deadLine, width: lineWidth, alpha });
-  }
-
-  setDanger(level: number): void {
-    this._dangerTween?.kill();
-    this._dangerTween = null;
-
-    if (level <= 0) {
-      this.draw(2, 0.8);
-      return;
-    }
-
-    const maxWidth = 2 + level * 2;
-    this.draw(maxWidth, 0.8 + level * 0.1);
-
-    if (level >= 1) {
-      this._dangerTween = gsap.to(this.line, {
-        alpha: 0.2,
-        duration: 0.4 - level * 0.08,
-        yoyo: true,
-        repeat: -1,
-        ease: 'sine.inOut',
-      });
     }
   }
 }

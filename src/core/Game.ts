@@ -144,9 +144,6 @@ export class Game {
       this.pushTimer += deltaMS;
       this.ui.updatePushTimer(this.pushTimer / this.pushInterval);
 
-      const dangerRows = Math.max(0, this.rows.length - (GRID_VISIBLE_ROWS - 3));
-      this.gridContainer.setDangerLevel(dangerRows);
-
       this.gridContainer.setVisibleRowCount(this.rows.length);
 
       if (this.pushTimer >= this.pushInterval) {

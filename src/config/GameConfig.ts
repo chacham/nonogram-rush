@@ -5,6 +5,8 @@ export const CELL_SIZE = 48;
 export const CELL_GAP = 2;
 export const HINT_AREA_WIDTH = 120;
 export const COL_HINT_AREA_HEIGHT = 100;
+export const UI_PANEL_WIDTH = 180;
+export const TIMER_BAR_HEIGHT = 8;
 
 export const PUSH_INTERVAL_BASE = 5000;
 export const PUSH_INTERVAL_MIN = 1500;
@@ -22,8 +24,8 @@ export const COMBO_MULTIPLIER = 0.5;
 export const GRID_WIDTH = GRID_COLS * (CELL_SIZE + CELL_GAP) - CELL_GAP;
 export const GRID_HEIGHT = GRID_VISIBLE_ROWS * (CELL_SIZE + CELL_GAP) - CELL_GAP;
 
-export const CANVAS_WIDTH = HINT_AREA_WIDTH + GRID_WIDTH + 40;
-export const CANVAS_HEIGHT = COL_HINT_AREA_HEIGHT + GRID_HEIGHT + 60;
+export const CANVAS_WIDTH = HINT_AREA_WIDTH + GRID_WIDTH + UI_PANEL_WIDTH;
+export const CANVAS_HEIGHT = COL_HINT_AREA_HEIGHT + GRID_HEIGHT + TIMER_BAR_HEIGHT + 16;
 
 export const STAGE_GOAL_LINES = 30;
 

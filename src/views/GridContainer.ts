@@ -8,7 +8,7 @@ import {
   COL_HINT_VISIBLE_THRESHOLD,
 } from '@/config/GameConfig.js';
 import { COLORS } from '@/config/Theme.js';
-import { ColumnHintsContainer, DeadLineView } from './HintViews.js';
+import { ColumnHintsContainer } from './HintViews.js';
 import { calculateColumnHintsWithBoundary } from '@/utils/HintUtils.js';
 import gsap from 'gsap';
 
@@ -18,7 +18,6 @@ export class GridContainer extends Container {
   private rowViews: RowView[] = [];
   private rowPool: RowView[] = [];
   private colHints: ColumnHintsContainer;
-  private deadLine: DeadLineView;
   private gridBg: Graphics;
   private _rows: RowData[] = [];
   private _cursorRow = -1;
@@ -44,10 +43,6 @@ export class GridContainer extends Container {
     this.colHints.x = HINT_AREA_WIDTH;
     this.colHints.y = 0;
     this.addChild(this.colHints);
-
-    this.deadLine = new DeadLineView(HINT_AREA_WIDTH + GRID_WIDTH);
-    this.deadLine.y = COL_HINT_AREA_HEIGHT;
-    this.addChild(this.deadLine);
   }
 
   private drawBackground(): void {
@@ -205,10 +200,6 @@ export class GridContainer extends Container {
   removeRowsAndRebuild(_rowIndices: number[], rows: RowData[]): void {
     this._rows = rows;
     this.rebuildRowViews();
-  }
-
-  setDangerLevel(level: number): void {
-    this.deadLine.setDanger(level);
   }
 
   revealColHint(col: number): void {
