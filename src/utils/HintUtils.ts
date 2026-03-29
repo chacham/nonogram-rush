@@ -40,12 +40,12 @@ export function validateRow(playerCells: CellState[], solutionHints: HintSegment
 }
 
 export function calculateColumnHints(
-  rows: CellState[][],
+  rows: number[][],
   colCount: number
 ): HintSegment[][] {
   const result: HintSegment[][] = [];
   for (let col = 0; col < colCount; col++) {
-    const column = rows.map(row => row[col] ?? CellState.EMPTY);
+    const column = rows.map(row => (row[col] ?? 0) === 1 ? CellState.FILLED : CellState.EMPTY);
     result.push(calculateHints(column));
   }
   return result;

@@ -213,7 +213,7 @@ export class GridContainer extends Container {
   private updateColHints(): void {
     const activeCells = this._rows
       .filter(r => !r.cleared)
-      .map(r => r.cells);
+      .map(r => r.solution);
     const hints = calculateColumnHints(activeCells, this.cols);
     this.colHints.update(hints);
   }
