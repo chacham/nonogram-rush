@@ -1,5 +1,5 @@
 export const GRID_COLS = 10;
-export const GRID_VISIBLE_ROWS = 12;
+export const GRID_VISIBLE_ROWS = 15;
 
 export const CELL_SIZE = 48;
 export const CELL_GAP = 2;

@@ -79,8 +79,10 @@ export class CellView extends Container {
   setHighlight(active: boolean): void {
     this.highlight.clear();
     if (active) {
-      this.highlight.roundRect(1, 1, CELL_SIZE - 2, CELL_SIZE - 2, 4);
-      this.highlight.stroke({ color: COLORS.uiAccent, width: 2, alpha: 0.9 });
+      this.highlight.roundRect(0, 0, CELL_SIZE, CELL_SIZE, 4);
+      this.highlight.fill({ color: COLORS.cursorHighlight, alpha: 0.25 });
+      this.highlight.roundRect(1, 1, CELL_SIZE - 2, CELL_SIZE - 2, 3);
+      this.highlight.stroke({ color: COLORS.cursorHighlight, width: 2.5, alpha: 1 });
     }
   }
 

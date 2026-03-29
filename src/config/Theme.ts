@@ -9,7 +9,7 @@ export const COLORS = {
   cellCrossedBorder: 0xaa0044,
   hintText: 0xe0e0ff,
   hintTextDim: 0x6060aa,
-  deadLine: 0xff3300,
+  cursorHighlight: 0xffdd00,
   deadLineGlow: 0xff6600,
   rowClearFlash: 0xffffff,
   uiText: 0xe0e0ff,

@@ -90,8 +90,9 @@ export class InputSystem {
   }
 
   private moveCursor(dRow: number, dCol: number): void {
-    const newRow = Math.max(0, Math.min(this.totalRows - 1, this.cursorRow + dRow));
-    const newCol = Math.max(0, Math.min(this.totalCols - 1, this.cursorCol + dCol));
+    if (this.totalRows === 0) return;
+    const newRow = ((this.cursorRow + dRow) % this.totalRows + this.totalRows) % this.totalRows;
+    const newCol = ((this.cursorCol + dCol) % this.totalCols + this.totalCols) % this.totalCols;
     this.cursorRow = newRow;
     this.cursorCol = newCol;
     this.onMoveCursor?.(newRow, newCol);
