@@ -127,6 +127,15 @@ export class Game {
       this.handleCellMark(row, col, state);
     };
 
+    this.input.onCellPaint = (row, col, state) => {
+      if (this.sm.current !== GameState.IDLE && this.sm.current !== GameState.PUSHING
+        && this.sm.current !== GameState.CLEARING) return;
+      const rowData = this.rows[row];
+      if (!rowData || rowData.cleared) return;
+      if (rowData.cells[col] === state) return;
+      this.handleCellMark(row, col, state);
+    };
+
     this.input.onMoveCursor = (row, col) => {
       this.gridContainer.setCursor(row, col);
     };
@@ -336,7 +345,10 @@ export class Game {
     this.buffer.saveToSession();
 
     const { isCombo } = this.scoring.onLinesCleared(1);
-    this.hintReveal.onRowCleared();
+    const stageQueueEmpty = this.playMode === PlayMode.STAGE && this.rowQueue.length === 0;
+    if (!stageQueueEmpty) {
+      this.hintReveal.onRowCleared();
+    }
     this.hearts = Math.min(MAX_HEARTS, this.hearts + 1);
     this.ui.updateScore(this.scoring.current);
     this.ui.updateHearts(this.hearts);
@@ -367,6 +379,10 @@ export class Game {
 
       this.sm.forceState(GameState.IDLE);
       this.recheckAllRows();
+
+      if (this.playMode === PlayMode.STAGE && this.rowQueue.length === 0) {
+        this.gridContainer.showAllColHints();
+      }
     });
   }
 

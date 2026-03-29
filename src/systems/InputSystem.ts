@@ -13,6 +13,7 @@ export class InputSystem {
   private isPointerDown = false;
 
   onCellMark?: (row: number, col: number, state: CellState) => void;
+  onCellPaint?: (row: number, col: number, state: CellState) => void;
   onMoveCursor?: (row: number, col: number) => void;
 
   private totalRows = 0;
@@ -74,7 +75,7 @@ export class InputSystem {
       } else {
         newState = this.dragStartState === CellState.FILLED ? CellState.EMPTY : CellState.FILLED;
       }
-      this.onCellMark?.(rowIndex, col, newState);
+      this.onCellPaint?.(rowIndex, col, newState);
     };
 
     gridContainer.onCellPointerUp = () => {
@@ -113,7 +114,7 @@ export class InputSystem {
     }
 
     if (this.heldAction !== null) {
-      this.triggerMark(this.heldAction);
+      this.onCellPaint?.(this.cursorRow, this.cursorCol, this.heldAction);
     }
   }
 
