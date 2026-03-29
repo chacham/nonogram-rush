@@ -104,11 +104,7 @@ export class Game {
     this.pushTimer = 0;
     this.freezeTimer = 0;
 
-    for (let i = 0; i < GRID_VISIBLE_ROWS; i++) {
-      this.rows.push(generateRow(GRID_COLS));
-    }
-
-    this.input.init(GRID_COLS, this.rows.length);
+    this.input.init(GRID_COLS, 0);
     this.gridContainer.setRows(this.rows);
     this.ui.hideMessage();
     this.ui.updateScore(this.scoring.current);
