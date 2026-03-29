@@ -90,7 +90,7 @@ export class Game {
     this.input.bindDragOnGrid(this.gridContainer);
 
     this.input.onCellMark = (row, col, state) => {
-      if (this.sm.current !== GameState.IDLE) return;
+      if (this.sm.current === GameState.GAME_OVER || this.sm.current === GameState.FINALE) return;
       this.handleCellMark(row, col, state);
     };
 
@@ -168,7 +168,14 @@ export class Game {
       }
 
       this.sm.forceState(GameState.IDLE);
+      this.recheckAllRows();
     });
+  }
+
+  private recheckAllRows(): void {
+    for (let i = this.rows.length - 1; i >= 0; i--) {
+      this.checkRowCompletion(i);
+    }
   }
 
   private calcPushInterval(rowCount: number): number {
@@ -184,8 +191,6 @@ export class Game {
   }
 
   private handleCellMark(rowIndex: number, col: number, newState: CellState): void {
-    if (this.sm.current !== GameState.IDLE) return;
-
     const rowData = this.rows[rowIndex];
     if (!rowData || rowData.cleared) return;
 
