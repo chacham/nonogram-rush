@@ -3,7 +3,7 @@ import { RowView } from './RowView.js';
 import { RowData, CellState } from '@/types/index.js';
 import {
   GRID_COLS, GRID_VISIBLE_ROWS, GRID_WIDTH,
-  PUSH_ANIMATION_DURATION, COL_HINT_VISIBLE_THRESHOLD,
+  PUSH_ANIMATION_DURATION,
 } from '@/config/GameConfig.js';
 import {
   CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT,
@@ -216,14 +216,6 @@ export class GridContainer extends Container {
 
   setVisibleRowCount(count: number): void {
     this._visibleRowCount = count;
-    const shouldShow = count > COL_HINT_VISIBLE_THRESHOLD;
-    if (shouldShow && !this._allColHintsVisible) {
-      this._allColHintsVisible = true;
-      this.colHints.showAll();
-    } else if (!shouldShow && this._allColHintsVisible) {
-      this._allColHintsVisible = false;
-      this.colHints.hideAll();
-    }
     this.updateColHints();
   }
 
