@@ -1,7 +1,12 @@
 import { Container, Graphics } from 'pixi.js';
 import { CellState } from '@/types/index.js';
-import { CELL_SIZE } from '@/config/GameConfig.js';
+import { CELL_SIZE, CELL_RADIUS } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
+
+const CROSS_MARGIN = 8;
+const CROSS_STROKE = 2.5;
+const CURSOR_STROKE = 2.5;
+const CURSOR_FILL_ALPHA = 0.25;
 
 export class CellView extends Container {
   private bg: Graphics;
@@ -44,45 +49,45 @@ export class CellView extends Container {
 
   private drawEmpty(): void {
     this.bg.clear();
-    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, 4);
+    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, CELL_RADIUS);
     this.bg.fill({ color: COLORS.cellEmpty });
-    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, 4);
+    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, CELL_RADIUS);
     this.bg.stroke({ color: COLORS.cellEmptyBorder, width: 1 });
     this.mark.clear();
   }
 
   private drawFilled(): void {
     this.bg.clear();
-    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, 4);
+    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, CELL_RADIUS);
     this.bg.fill({ color: COLORS.cellFilled });
-    this.bg.roundRect(1, 1, CELL_SIZE - 2, CELL_SIZE - 2, 3);
-    this.bg.stroke({ color: 0xffffff, width: 1, alpha: 0.3 });
+    this.bg.roundRect(1, 1, CELL_SIZE - 2, CELL_SIZE - 2, CELL_RADIUS - 1);
+    this.bg.stroke({ color: COLORS.cellFilledSheen, width: 1, alpha: 0.3 });
     this.mark.clear();
   }
 
   private drawCrossed(): void {
     this.bg.clear();
-    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, 4);
+    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, CELL_RADIUS);
     this.bg.fill({ color: COLORS.cellEmpty });
-    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, 4);
+    this.bg.roundRect(0, 0, CELL_SIZE, CELL_SIZE, CELL_RADIUS);
     this.bg.stroke({ color: COLORS.cellCrossedBorder, width: 1 });
 
     this.mark.clear();
-    this.mark.moveTo(8, 8);
-    this.mark.lineTo(CELL_SIZE - 8, CELL_SIZE - 8);
-    this.mark.stroke({ color: COLORS.cellCrossed, width: 2.5 });
-    this.mark.moveTo(CELL_SIZE - 8, 8);
-    this.mark.lineTo(8, CELL_SIZE - 8);
-    this.mark.stroke({ color: COLORS.cellCrossed, width: 2.5 });
+    this.mark.moveTo(CROSS_MARGIN, CROSS_MARGIN);
+    this.mark.lineTo(CELL_SIZE - CROSS_MARGIN, CELL_SIZE - CROSS_MARGIN);
+    this.mark.stroke({ color: COLORS.cellCrossed, width: CROSS_STROKE });
+    this.mark.moveTo(CELL_SIZE - CROSS_MARGIN, CROSS_MARGIN);
+    this.mark.lineTo(CROSS_MARGIN, CELL_SIZE - CROSS_MARGIN);
+    this.mark.stroke({ color: COLORS.cellCrossed, width: CROSS_STROKE });
   }
 
   setHighlight(active: boolean): void {
     this.highlight.clear();
     if (active) {
-      this.highlight.roundRect(0, 0, CELL_SIZE, CELL_SIZE, 4);
-      this.highlight.fill({ color: COLORS.cursorHighlight, alpha: 0.25 });
-      this.highlight.roundRect(1, 1, CELL_SIZE - 2, CELL_SIZE - 2, 3);
-      this.highlight.stroke({ color: COLORS.cursorHighlight, width: 2.5, alpha: 1 });
+      this.highlight.roundRect(0, 0, CELL_SIZE, CELL_SIZE, CELL_RADIUS);
+      this.highlight.fill({ color: COLORS.cursorHighlight, alpha: CURSOR_FILL_ALPHA });
+      this.highlight.roundRect(1, 1, CELL_SIZE - 2, CELL_SIZE - 2, CELL_RADIUS - 1);
+      this.highlight.stroke({ color: COLORS.cursorHighlight, width: CURSOR_STROKE, alpha: 1 });
     }
   }
 

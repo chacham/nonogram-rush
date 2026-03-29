@@ -1,12 +1,12 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { ClearedRowRecord, CellType } from '@/types/index.js';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/config/GameConfig.js';
+import {
+  FINALE_CELL_SIZE, FINALE_CELL_GAP, FINALE_SCROLL_SPEED,
+  FINALE_TITLE_Y, FINALE_SUBTITLE_Y,
+} from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import gsap from 'gsap';
-
-const FINALE_CELL_SIZE = 8;
-const FINALE_CELL_GAP = 1;
-const SCROLL_SPEED = 80;
 
 export class FinaleView extends Container {
   private artContainer: Container;
@@ -28,7 +28,7 @@ export class FinaleView extends Container {
       style: { fontFamily: 'monospace', fontSize: 28, fill: COLORS.uiAccent },
     });
     this.titleText.x = CANVAS_WIDTH / 2;
-    this.titleText.y = 30;
+    this.titleText.y = FINALE_TITLE_Y;
     this.titleText.anchor.set(0.5, 0);
     this.addChild(this.titleText);
 
@@ -37,7 +37,7 @@ export class FinaleView extends Container {
       style: { fontFamily: 'monospace', fontSize: 14, fill: COLORS.hintText },
     });
     this.subtitleText.x = CANVAS_WIDTH / 2;
-    this.subtitleText.y = 70;
+    this.subtitleText.y = FINALE_SUBTITLE_Y;
     this.subtitleText.anchor.set(0.5, 0);
     this.addChild(this.subtitleText);
 
@@ -83,7 +83,7 @@ export class FinaleView extends Container {
 
     const finalY = CANVAS_HEIGHT / 2 - artHeight / 2;
     const scrollDist = artHeight + CANVAS_HEIGHT;
-    const scrollDuration = scrollDist / SCROLL_SPEED;
+    const scrollDuration = scrollDist / FINALE_SCROLL_SPEED;
 
     this._isScrolling = true;
     gsap.to(this.artContainer, {

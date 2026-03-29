@@ -2,11 +2,12 @@ import { Container, Graphics } from 'pixi.js';
 import { RowView } from './RowView.js';
 import { RowData, CellState } from '@/types/index.js';
 import {
-  CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH,
   GRID_COLS, GRID_VISIBLE_ROWS, GRID_WIDTH,
-  COL_HINT_AREA_HEIGHT, PUSH_ANIMATION_DURATION,
-  COL_HINT_VISIBLE_THRESHOLD,
+  PUSH_ANIMATION_DURATION, COL_HINT_VISIBLE_THRESHOLD,
 } from '@/config/GameConfig.js';
+import {
+  CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT,
+} from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import { ColumnHintsContainer } from './HintViews.js';
 import { calculateColumnHintsWithBoundary } from '@/utils/HintUtils.js';

@@ -4,7 +4,7 @@ export const COLORS = {
   cellEmpty: 0x1a1a2e,
   cellEmptyBorder: 0x2a2a4e,
   cellFilled: 0x00d4ff,
-  cellFilledGlow: 0x0088aa,
+  cellFilledSheen: 0xffffff,
   cellCrossed: 0xff0066,
   cellCrossedBorder: 0xaa0044,
   hintText: 0xe0e0ff,

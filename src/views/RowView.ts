@@ -2,11 +2,12 @@ import { Container, Graphics } from 'pixi.js';
 import { RowData, CellState } from '@/types/index.js';
 import { CellView } from './CellView.js';
 import { RowHintView } from './HintViews.js';
-import { CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH } from '@/config/GameConfig.js';
+import { CLEAR_ANIMATION_DURATION } from '@/config/GameConfig.js';
+import { CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import gsap from 'gsap';
 
-const CLEAR_ANIM_DURATION_S = 0.4;
+const CLEAR_ANIM_DURATION_S = CLEAR_ANIMATION_DURATION / 1000;
 
 export class RowView extends Container {
   private cells: CellView[] = [];

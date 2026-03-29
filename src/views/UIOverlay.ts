@@ -1,10 +1,12 @@
 import { Container, Text, Graphics } from 'pixi.js';
 import {
-  CANVAS_HEIGHT,
-  HINT_AREA_WIDTH, GRID_WIDTH,
-  COL_HINT_AREA_HEIGHT, GRID_HEIGHT,
-  UI_PANEL_WIDTH, TIMER_BAR_HEIGHT,
+  CANVAS_HEIGHT, GRID_WIDTH, GRID_HEIGHT,
 } from '@/config/GameConfig.js';
+import {
+  HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT,
+  UI_PANEL_WIDTH, TIMER_BAR_HEIGHT,
+  UI_FONT_SIZE_LARGE, UI_FONT_SIZE_MEDIUM, UI_FONT_SIZE_MESSAGE, UI_LINE_HEIGHT,
+} from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import { ScoreState } from '@/types/index.js';
 
@@ -36,11 +38,11 @@ export class UIOverlay extends Container {
     this.addChild(this.timerBarBg);
     this.addChild(this.timerBarFill);
 
-    this.scoreText = this.makeText('SCORE: 0', 16, COLORS.scoreText);
-    this.levelText = this.makeText('LV 1', 15, COLORS.uiAccent);
-    this.comboText = this.makeText('', 17, COLORS.comboText);
-    this.linesText = this.makeText('LINES: 0', 14, COLORS.uiText);
-    this.messageText = this.makeText('', 24, COLORS.gameOverText);
+    this.scoreText = this.makeText('SCORE: 0', UI_FONT_SIZE_LARGE, COLORS.scoreText);
+    this.levelText = this.makeText('LV 1', UI_FONT_SIZE_LARGE, COLORS.uiAccent);
+    this.comboText = this.makeText('', UI_FONT_SIZE_LARGE, COLORS.comboText);
+    this.linesText = this.makeText('LINES: 0', UI_FONT_SIZE_MEDIUM, COLORS.uiText);
+    this.messageText = this.makeText('', UI_FONT_SIZE_MESSAGE, COLORS.gameOverText);
 
     this.layoutElements();
     this.drawTimerBar(0);
@@ -66,16 +68,15 @@ export class UIOverlay extends Container {
 
   private layoutElements(): void {
     let y = COL_HINT_AREA_HEIGHT + 16;
-    const lineH = 28;
 
     this.scoreText.x = PANEL_X;
-    this.scoreText.y = y; y += lineH;
+    this.scoreText.y = y; y += UI_LINE_HEIGHT;
 
     this.levelText.x = PANEL_X;
-    this.levelText.y = y; y += lineH;
+    this.levelText.y = y; y += UI_LINE_HEIGHT;
 
     this.linesText.x = PANEL_X;
-    this.linesText.y = y; y += lineH;
+    this.linesText.y = y; y += UI_LINE_HEIGHT;
 
     this.comboText.x = PANEL_X;
     this.comboText.y = y;

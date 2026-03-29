@@ -1,6 +1,6 @@
 import { Container, Text } from 'pixi.js';
 import { HintSegment } from '@/types/index.js';
-import { CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT } from '@/config/GameConfig.js';
+import { CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT, ROW_HINT_FONT_SIZE, COL_HINT_FONT_SIZE } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import gsap from 'gsap';
 
@@ -18,7 +18,7 @@ export class RowHintView extends Container {
       text: '',
       style: {
         fontFamily: 'monospace',
-        fontSize: 14,
+        fontSize: ROW_HINT_FONT_SIZE,
         fill: COLORS.hintText,
         align: 'right',
       },
@@ -33,7 +33,7 @@ export class RowHintView extends Container {
   }
 
   setDim(dim: boolean): void {
-    this.textObj.tint = dim ? COLORS.hintTextDim : 0xffffff;
+    this.textObj.tint = dim ? COLORS.hintTextDim : COLORS.hintText;
   }
 }
 
@@ -46,7 +46,7 @@ export class ColHintView extends Container {
       text: '',
       style: {
         fontFamily: 'monospace',
-        fontSize: 12,
+        fontSize: COL_HINT_FONT_SIZE,
         fill: COLORS.hintText,
         align: 'center',
         wordWrap: false,

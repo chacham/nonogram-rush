@@ -1,6 +1,6 @@
 import { CellType, HintSegment, RowData, CellState } from '@/types/index.js';
 import { calculateHints } from '@/utils/HintUtils.js';
-import { GRID_COLS } from '@/config/GameConfig.js';
+import { GRID_COLS, ROW_FILL_RATIO } from '@/config/GameConfig.js';
 
 let rowCounter = 0;
 
@@ -16,7 +16,7 @@ function solutionToCellStates(solution: CellType[]): CellState[] {
   return solution.map(t => (t === CellType.FILLED ? CellState.FILLED : CellState.EMPTY));
 }
 
-export function generateRow(cols: number = GRID_COLS, fillRatio?: number): RowData {
+export function generateRow(cols: number = GRID_COLS, fillRatio: number = ROW_FILL_RATIO): RowData {
   const solution = generateSolution(cols, fillRatio);
   const solutionAsStates = solutionToCellStates(solution);
   const hints = calculateHints(solutionAsStates);
