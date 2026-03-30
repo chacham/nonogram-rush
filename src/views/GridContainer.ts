@@ -1,19 +1,15 @@
 import { Container, Graphics } from 'pixi.js';
 import { RowView } from './RowView.js';
 import { RowData, CellState } from '@/types/index.js';
+import { PUSH_ANIMATION_DURATION } from '@/config/GameConfig.js';
 import {
-  GRID_COLS, GRID_VISIBLE_ROWS, GRID_WIDTH,
-  PUSH_ANIMATION_DURATION,
-} from '@/config/GameConfig.js';
-import {
-  CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT,
+  CELL_GAP, COL_HINT_AREA_HEIGHT,
+  calcCellSize, calcHintAreaWidth, gridWidth, gridHeight as calcGridHeight,
 } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import { ColumnHintsContainer } from './HintViews.js';
 import { calculateColumnHintsWithBoundary } from '@/utils/HintUtils.js';
 import gsap from 'gsap';
-
-const ROW_HEIGHT = CELL_SIZE + CELL_GAP;
 
 export class GridContainer extends Container {
   private rowViews: RowView[] = [];
@@ -26,16 +22,22 @@ export class GridContainer extends Container {
   private _cursorCol = -1;
   readonly cols: number;
   readonly visibleRows: number;
+  readonly cellSize: number;
+  readonly hintAreaWidth: number;
+  readonly rowHeight: number;
 
   onCellClick?: (rowIndex: number, col: number, state: CellState) => void;
   onCellPointerDown?: (rowIndex: number, col: number, currentState: CellState, button: number) => void;
   onCellPointerEnter?: (rowIndex: number, col: number) => void;
   onCellPointerUp?: () => void;
 
-  constructor(cols = GRID_COLS, visibleRows = GRID_VISIBLE_ROWS) {
+  constructor(cols = 10, visibleRows = 15) {
     super();
     this.cols = cols;
     this.visibleRows = visibleRows;
+    this.cellSize = calcCellSize(cols);
+    this.hintAreaWidth = calcHintAreaWidth(cols);
+    this.rowHeight = this.cellSize + CELL_GAP;
 
     this.gridBg = new Graphics();
     this.addChild(this.gridBg);
@@ -44,32 +46,31 @@ export class GridContainer extends Container {
     this.crosshairLayer = new Graphics();
     this.addChild(this.crosshairLayer);
 
-    this.colHints = new ColumnHintsContainer(cols);
-    this.colHints.x = HINT_AREA_WIDTH;
+    this.colHints = new ColumnHintsContainer(cols, this.cellSize);
+    this.colHints.x = this.hintAreaWidth;
     this.colHints.y = 0;
     this.addChild(this.colHints);
   }
 
   private drawBackground(): void {
-    const w = HINT_AREA_WIDTH + GRID_WIDTH;
-    const h = COL_HINT_AREA_HEIGHT + visibleRowsHeight(this.visibleRows);
-    const gridH = visibleRowsHeight(this.visibleRows);
+    const w = this.hintAreaWidth + gridWidth(this.cols);
+    const gh = calcGridHeight(this.visibleRows, this.cols);
     this.gridBg.clear();
-    this.gridBg.rect(HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT, GRID_WIDTH, gridH);
+    this.gridBg.rect(this.hintAreaWidth, COL_HINT_AREA_HEIGHT, gridWidth(this.cols), gh);
     this.gridBg.fill({ color: COLORS.gridBackground });
 
     for (let col = 0; col < this.cols; col++) {
-      const left = HINT_AREA_WIDTH + col * (CELL_SIZE + CELL_GAP);
-      const right = left + CELL_SIZE;
+      const left = this.hintAreaWidth + col * (this.cellSize + CELL_GAP);
+      const right = left + this.cellSize;
       this.gridBg.moveTo(left, COL_HINT_AREA_HEIGHT);
-      this.gridBg.lineTo(left, COL_HINT_AREA_HEIGHT + gridH);
+      this.gridBg.lineTo(left, COL_HINT_AREA_HEIGHT + gh);
       this.gridBg.stroke({ color: COLORS.gridGuide, width: 1, alpha: 0.15 });
       this.gridBg.moveTo(right, COL_HINT_AREA_HEIGHT);
-      this.gridBg.lineTo(right, COL_HINT_AREA_HEIGHT + gridH);
+      this.gridBg.lineTo(right, COL_HINT_AREA_HEIGHT + gh);
       this.gridBg.stroke({ color: COLORS.gridGuide, width: 1, alpha: 0.15 });
     }
 
-    this.gridBg.rect(0, 0, w, h);
+    this.gridBg.rect(0, 0, w, COL_HINT_AREA_HEIGHT + gh);
     this.gridBg.stroke({ color: COLORS.cellEmptyBorder, width: 0.5, alpha: 0.3 });
   }
 
@@ -79,7 +80,7 @@ export class GridContainer extends Container {
       pooled.alpha = 1;
       return pooled;
     }
-    const view = new RowView(this.cols);
+    const view = new RowView(this.cols, this.cellSize, this.hintAreaWidth);
     this.setupCellHandlers(view);
     return view;
   }
@@ -154,7 +155,7 @@ export class GridContainer extends Container {
   }
 
   private getRowY(visualIndex: number): number {
-    return COL_HINT_AREA_HEIGHT + visualIndex * ROW_HEIGHT;
+    return COL_HINT_AREA_HEIGHT + visualIndex * this.rowHeight;
   }
 
   setCursor(row: number, col: number): void {
@@ -181,16 +182,16 @@ export class GridContainer extends Container {
 
     if (!hasCursor) return;
 
-    const gridH = visibleRowsHeight(this.visibleRows);
-    const colX = HINT_AREA_WIDTH + this._cursorCol * (CELL_SIZE + CELL_GAP);
+    const gh = calcGridHeight(this.visibleRows, this.cols);
+    const colX = this.hintAreaWidth + this._cursorCol * (this.cellSize + CELL_GAP);
 
-    this.crosshairLayer.rect(colX, COL_HINT_AREA_HEIGHT, CELL_SIZE, gridH);
+    this.crosshairLayer.rect(colX, COL_HINT_AREA_HEIGHT, this.cellSize, gh);
     this.crosshairLayer.fill({ color: COLORS.crosshairGuide, alpha: 0.07 });
 
     const cursorView = this.rowViews.find(v => v.rowIndex === this._cursorRow);
     if (cursorView) {
       const rowY = cursorView.y;
-      this.crosshairLayer.rect(HINT_AREA_WIDTH, rowY, GRID_WIDTH, CELL_SIZE);
+      this.crosshairLayer.rect(this.hintAreaWidth, rowY, gridWidth(this.cols), this.cellSize);
       this.crosshairLayer.fill({ color: COLORS.crosshairGuide, alpha: 0.07 });
     }
 
@@ -212,7 +213,7 @@ export class GridContainer extends Container {
 
     for (const view of this.rowViews) {
       gsap.to(view, {
-        y: view.y - ROW_HEIGHT,
+        y: view.y - this.rowHeight,
         duration: durationS,
         ease: 'power2.out',
       });
@@ -291,8 +292,4 @@ export class GridContainer extends Container {
     this.applyCursorHighlight();
     this.updateColHints();
   }
-}
-
-function visibleRowsHeight(rows: number): number {
-  return rows * ROW_HEIGHT - CELL_GAP;
 }

@@ -5,6 +5,9 @@ import {
   PUSH_INTERVAL_BASE, PUSH_INTERVAL_MIN, PUSH_INTERVAL_SCALE,
   STAGE_GOAL_LINES, COMBO_FREEZE_DURATION, MAX_HEARTS,
 } from '@/config/GameConfig.js';
+import {
+  gridWidth, gridHeight,
+} from '@/config/LayoutConfig.js';
 import { GameState, GameMode, PlayMode, CellState, CellType, RowData, StageData } from '@/types/index.js';
 import { StateMachine, createGameStateMachine } from '@/core/StateMachine.js';
 import { GridContainer } from '@/views/GridContainer.js';
@@ -121,6 +124,27 @@ export class Game {
 
   private setupInput(): void {
     this.unbindKeyboard = this.input.bindKeyboard();
+    this.bindInputToGrid();
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape') {
+        if (this.settingsView.isListening) return;
+        if (this.sm.current === GameState.SETTINGS) {
+          this.showMenu();
+        } else if (this.sm.current !== GameState.MENU) {
+          this.showMenu();
+        }
+        return;
+      }
+      if (e.code === 'KeyR' && this.sm.current === GameState.GAME_OVER) {
+        this.startNewGame();
+      }
+    });
+
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  private bindInputToGrid(): void {
     this.input.bindDragOnGrid(this.gridContainer);
 
     this.input.onCellMark = (row, col, state) => {
@@ -141,23 +165,6 @@ export class Game {
     this.input.onMoveCursor = (row, col) => {
       this.gridContainer.setCursor(row, col);
     };
-
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Escape') {
-        if (this.settingsView.isListening) return;
-        if (this.sm.current === GameState.SETTINGS) {
-          this.showMenu();
-        } else if (this.sm.current !== GameState.MENU) {
-          this.showMenu();
-        }
-        return;
-      }
-      if (e.code === 'KeyR' && this.sm.current === GameState.GAME_OVER) {
-        this.startNewGame();
-      }
-    });
-
-    window.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   private startNewGame(): void {
@@ -178,7 +185,7 @@ export class Game {
     this.stageStartTime = 0;
     this.elapsedMs = 0;
 
-    this.input.init(GRID_COLS, 0);
+    this.input.init(this.gridContainer.cols, 0);
     this.gridContainer.setRows(this.rows);
     this.gridContainer.hideAllColHints();
     this.ui.hideMessage();
@@ -209,7 +216,39 @@ export class Game {
     this.settingsView.hide();
     this.scene.visible = true;
     this.input.reloadBindings();
+    this.initSceneForCols(stageData?.cols ?? GRID_COLS);
     this.startNewGame();
+  }
+
+  private initSceneForCols(cols: number): void {
+    if (this.gridContainer) {
+      this.scene.removeChild(this.gridContainer);
+      this.gridContainer.destroy({ children: true });
+    }
+    this.gridContainer = new GridContainer(cols, GRID_VISIBLE_ROWS);
+    this.gridContainer.x = 0;
+    this.gridContainer.y = 0;
+    this.scene.addChildAt(this.gridContainer, 0);
+
+    this.gridContainer.onCellClick = (rowIndex, col, newState) => {
+      this.handleCellMark(rowIndex, col, newState);
+    };
+
+    this.hintReveal = new ColHintRevealSystem(cols);
+    this.hintReveal.onRevealCol = (col) => {
+      this.gridContainer.revealColHint(col);
+    };
+    this.hintReveal.onHideCol = (col) => {
+      this.gridContainer.hideColHint(col);
+    };
+
+    this.bindInputToGrid();
+
+    this.ui.updateGridDims(
+      this.gridContainer.hintAreaWidth,
+      gridWidth(cols),
+      gridHeight(GRID_VISIBLE_ROWS, cols),
+    );
   }
 
   private update(deltaMS: number): void {

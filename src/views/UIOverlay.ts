@@ -1,21 +1,15 @@
 import { Container, Text, Graphics } from 'pixi.js';
+import { MAX_HEARTS } from '@/config/GameConfig.js';
 import {
-  CANVAS_HEIGHT, GRID_WIDTH, GRID_HEIGHT, MAX_HEARTS,
-} from '@/config/GameConfig.js';
-import {
-  HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT,
-  UI_PANEL_WIDTH, TIMER_BAR_HEIGHT,
+  CANVAS_HEIGHT as BASE_CANVAS_HEIGHT,
+  UI_PANEL_WIDTH,
+  COL_HINT_AREA_HEIGHT,
+  TIMER_BAR_HEIGHT,
   UI_FONT_SIZE_LARGE, UI_FONT_SIZE_MEDIUM, UI_FONT_SIZE_SMALL, UI_FONT_SIZE_MESSAGE, UI_LINE_HEIGHT,
 } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import { ScoreState, KeyBindings } from '@/types/index.js';
 import { keyCodeToLabel } from '@/systems/KeyBindingsManager.js';
-
-const PANEL_X = HINT_AREA_WIDTH + GRID_WIDTH + 12;
-const PANEL_INNER_W = UI_PANEL_WIDTH - 20;
-
-const TIMER_BAR_Y = COL_HINT_AREA_HEIGHT + GRID_HEIGHT + 8;
-const TIMER_BAR_W = GRID_WIDTH;
 
 export class UIOverlay extends Container {
   private scoreText: Text;
@@ -29,13 +23,17 @@ export class UIOverlay extends Container {
   private panelBg: Graphics;
   private timerBarBg: Graphics;
   private timerBarFill: Graphics;
+  private panelX = 0;
+  private timerBarW = 0;
+  private timerBarY = 0;
+  private messageX = 0;
+  private messageY = 0;
 
   constructor() {
     super();
 
     this.panelBg = new Graphics();
     this.addChild(this.panelBg);
-    this.drawPanelBg();
 
     this.timerBarBg = new Graphics();
     this.timerBarFill = new Graphics();
@@ -50,7 +48,19 @@ export class UIOverlay extends Container {
     this.timeText = this.makeText('TIME  0:00', UI_FONT_SIZE_MEDIUM, COLORS.hintText);
     this.keysText = this.makeText('', UI_FONT_SIZE_SMALL, COLORS.hintTextDim);
     this.messageText = this.makeText('', UI_FONT_SIZE_MESSAGE, COLORS.gameOverText);
+    this.messageText.anchor.set(0.5);
+    this.messageText.alpha = 0;
+    this.addChild(this.messageText);
+  }
 
+  updateGridDims(hintAreaWidth: number, gridW: number, gridH: number): void {
+    this.panelX = hintAreaWidth + gridW + 12;
+    this.timerBarW = gridW;
+    this.timerBarY = COL_HINT_AREA_HEIGHT + gridH + 8;
+    this.messageX = hintAreaWidth + gridW / 2;
+    this.messageY = BASE_CANVAS_HEIGHT / 2;
+
+    this.drawPanelBg();
     this.layoutElements();
     this.drawTimerBar(0);
   }
@@ -65,57 +75,56 @@ export class UIOverlay extends Container {
   }
 
   private drawPanelBg(): void {
-    const panelH = COL_HINT_AREA_HEIGHT + GRID_HEIGHT;
+    const panelInnerW = UI_PANEL_WIDTH - 20;
+    const panelH = COL_HINT_AREA_HEIGHT + (this.timerBarY - COL_HINT_AREA_HEIGHT);
     this.panelBg.clear();
-    this.panelBg.rect(PANEL_X - 8, COL_HINT_AREA_HEIGHT, PANEL_INNER_W + 16, panelH);
+    this.panelBg.rect(this.panelX - 8, COL_HINT_AREA_HEIGHT, panelInnerW + 16, panelH);
     this.panelBg.fill({ color: 0x0d0d1a, alpha: 0.6 });
-    this.panelBg.rect(PANEL_X - 8, COL_HINT_AREA_HEIGHT, PANEL_INNER_W + 16, panelH);
+    this.panelBg.rect(this.panelX - 8, COL_HINT_AREA_HEIGHT, panelInnerW + 16, panelH);
     this.panelBg.stroke({ color: COLORS.cellEmptyBorder, width: 1, alpha: 0.25 });
   }
 
   private layoutElements(): void {
     let y = COL_HINT_AREA_HEIGHT + 16;
 
-    this.scoreText.x = PANEL_X;
+    this.scoreText.x = this.panelX;
     this.scoreText.y = y; y += UI_LINE_HEIGHT;
 
-    this.levelText.x = PANEL_X;
+    this.levelText.x = this.panelX;
     this.levelText.y = y; y += UI_LINE_HEIGHT;
 
-    this.linesText.x = PANEL_X;
+    this.linesText.x = this.panelX;
     this.linesText.y = y; y += UI_LINE_HEIGHT;
 
-    this.timeText.x = PANEL_X;
+    this.timeText.x = this.panelX;
     this.timeText.y = y; y += UI_LINE_HEIGHT;
 
-    this.comboText.x = PANEL_X;
+    this.comboText.x = this.panelX;
     this.comboText.y = y; y += UI_LINE_HEIGHT;
 
-    this.heartsText.x = PANEL_X;
+    this.heartsText.x = this.panelX;
     this.heartsText.y = y; y += UI_LINE_HEIGHT + 12;
 
-    this.keysText.x = PANEL_X;
+    this.keysText.x = this.panelX;
     this.keysText.y = y;
 
-    this.messageText.x = HINT_AREA_WIDTH + GRID_WIDTH / 2;
-    this.messageText.y = CANVAS_HEIGHT / 2;
-    this.messageText.anchor.set(0.5);
-    this.messageText.alpha = 0;
+    this.messageText.x = this.messageX;
+    this.messageText.y = this.messageY;
 
-    this.timerBarBg.x = HINT_AREA_WIDTH;
-    this.timerBarBg.y = TIMER_BAR_Y;
-    this.timerBarFill.x = HINT_AREA_WIDTH;
-    this.timerBarFill.y = TIMER_BAR_Y;
+    this.timerBarBg.x = this.panelX - this.timerBarW - 12;
+    this.timerBarBg.y = this.timerBarY;
+    this.timerBarFill.x = this.panelX - this.timerBarW - 12;
+    this.timerBarFill.y = this.timerBarY;
   }
 
   private drawTimerBar(progress: number): void {
     this.timerBarBg.clear();
-    this.timerBarBg.rect(0, 0, TIMER_BAR_W, TIMER_BAR_HEIGHT);
+    this.timerBarBg.rect(0, 0, this.timerBarW, TIMER_BAR_HEIGHT);
     this.timerBarBg.fill({ color: 0x1a1a2e, alpha: 0.8 });
-    this.timerBarBg.rect(0, 0, TIMER_BAR_W, TIMER_BAR_HEIGHT);
+    this.timerBarBg.rect(0, 0, this.timerBarW, TIMER_BAR_HEIGHT);
     this.timerBarBg.stroke({ color: COLORS.cellEmptyBorder, width: 1, alpha: 0.4 });
 
-    const fillW = Math.max(0, Math.min(1, progress)) * TIMER_BAR_W;
+    const fillW = Math.max(0, Math.min(1, progress)) * this.timerBarW;
     const danger = progress > 0.75;
     const fillColor = danger ? COLORS.uiWarning : COLORS.uiAccent;
 

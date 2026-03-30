@@ -1,6 +1,6 @@
 import { Container, Text } from 'pixi.js';
 import { HintSegment } from '@/types/index.js';
-import { CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH, COL_HINT_AREA_HEIGHT, ROW_HINT_FONT_SIZE, COL_HINT_FONT_SIZE } from '@/config/LayoutConfig.js';
+import { CELL_GAP, COL_HINT_AREA_HEIGHT, ROW_HINT_FONT_SIZE, COL_HINT_FONT_SIZE } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import gsap from 'gsap';
 
@@ -11,9 +11,11 @@ function hintsToString(hints: HintSegment[]): string {
 
 export class RowHintView extends Container {
   private textObj: Text;
+  private hintAreaWidth: number;
 
-  constructor() {
+  constructor(hintAreaWidth: number) {
     super();
+    this.hintAreaWidth = hintAreaWidth;
     this.textObj = new Text({
       text: '',
       style: {
@@ -28,8 +30,8 @@ export class RowHintView extends Container {
 
   setHints(hints: HintSegment[]): void {
     this.textObj.text = hintsToString(hints);
-    this.textObj.x = HINT_AREA_WIDTH - this.textObj.width - 10;
-    this.textObj.y = (CELL_SIZE - this.textObj.height) / 2;
+    this.textObj.x = this.hintAreaWidth - this.textObj.width - 10;
+    this.textObj.y = (CELL_GAP + 4 - this.textObj.height) / 2;
   }
 
   setDim(dim: boolean): void {
@@ -43,9 +45,11 @@ export class RowHintView extends Container {
 
 export class ColHintView extends Container {
   private textObj: Text;
+  private cellSize: number;
 
-  constructor() {
+  constructor(cellSize: number) {
     super();
+    this.cellSize = cellSize;
     this.textObj = new Text({
       text: '',
       style: {
@@ -64,7 +68,7 @@ export class ColHintView extends Container {
       ? ['0']
       : hints.map(h => String(h.run));
     this.textObj.text = lines.join('\n');
-    this.textObj.x = (CELL_SIZE - this.textObj.width) / 2;
+    this.textObj.x = (this.cellSize - this.textObj.width) / 2;
     this.textObj.y = COL_HINT_AREA_HEIGHT - this.textObj.height - 4;
   }
 
@@ -78,16 +82,16 @@ export class ColumnHintsContainer extends Container {
   private readonly cols: number;
   private _highlightedCol = -1;
 
-  constructor(cols: number) {
+  constructor(cols: number, cellSize: number) {
     super();
     this.cols = cols;
-    this.setupViews();
+    this.setupViews(cellSize);
   }
 
-  private setupViews(): void {
+  private setupViews(cellSize: number): void {
     for (let col = 0; col < this.cols; col++) {
-      const view = new ColHintView();
-      view.x = col * (CELL_SIZE + CELL_GAP);
+      const view = new ColHintView(cellSize);
+      view.x = col * (cellSize + CELL_GAP);
       view.y = 0;
       view.alpha = 0;
       this.addChild(view);

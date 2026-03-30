@@ -3,7 +3,7 @@ import { RowData, CellState } from '@/types/index.js';
 import { CellView } from './CellView.js';
 import { RowHintView } from './HintViews.js';
 import { CLEAR_ANIMATION_DURATION } from '@/config/GameConfig.js';
-import { CELL_SIZE, CELL_GAP, HINT_AREA_WIDTH } from '@/config/LayoutConfig.js';
+import { CELL_GAP } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import gsap from 'gsap';
 
@@ -17,23 +17,23 @@ export class RowView extends Container {
   private _data: RowData | null = null;
   readonly cellContainer: Container;
 
-  constructor(cols: number) {
+  constructor(cols: number, cellSize: number, hintAreaWidth: number) {
     super();
     this.bg = new Graphics();
     this.addChild(this.bg);
 
-    this.hintView = new RowHintView();
+    this.hintView = new RowHintView(hintAreaWidth);
     this.addChild(this.hintView);
 
     this.cellContainer = new Container();
-    this.cellContainer.x = HINT_AREA_WIDTH;
+    this.cellContainer.x = hintAreaWidth;
     this.addChild(this.cellContainer);
 
-    this.drawBackground(cols);
+    this.drawBackground(cols, cellSize, hintAreaWidth);
 
     for (let col = 0; col < cols; col++) {
-      const cell = new CellView();
-      cell.x = col * (CELL_SIZE + CELL_GAP);
+      const cell = new CellView(cellSize);
+      cell.x = col * (cellSize + CELL_GAP);
       cell.y = 0;
       cell.setup(0, col);
       this.cellContainer.addChild(cell);
@@ -41,10 +41,10 @@ export class RowView extends Container {
     }
   }
 
-  private drawBackground(cols: number): void {
-    const w = HINT_AREA_WIDTH + cols * (CELL_SIZE + CELL_GAP) - CELL_GAP;
+  private drawBackground(cols: number, cellSize: number, hintAreaWidth: number): void {
+    const w = hintAreaWidth + cols * (cellSize + CELL_GAP) - CELL_GAP;
     this.bg.clear();
-    this.bg.rect(0, 0, w, CELL_SIZE);
+    this.bg.rect(0, 0, w, cellSize);
     this.bg.fill({ color: COLORS.gridBackground, alpha: 0 });
   }
 
