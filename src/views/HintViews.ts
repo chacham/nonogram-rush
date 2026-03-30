@@ -12,10 +12,12 @@ function hintsToString(hints: HintSegment[]): string {
 export class RowHintView extends Container {
   private textObj: Text;
   private hintAreaWidth: number;
+  private cellSize: number;
 
-  constructor(hintAreaWidth: number) {
+  constructor(hintAreaWidth: number, cellSize: number) {
     super();
     this.hintAreaWidth = hintAreaWidth;
+    this.cellSize = cellSize;
     this.textObj = new Text({
       text: '',
       style: {
@@ -31,7 +33,7 @@ export class RowHintView extends Container {
   setHints(hints: HintSegment[]): void {
     this.textObj.text = hintsToString(hints);
     this.textObj.x = this.hintAreaWidth - this.textObj.width - 10;
-    this.textObj.y = (CELL_GAP + 4 - this.textObj.height) / 2;
+    this.textObj.y = (this.cellSize - this.textObj.height) / 2;
   }
 
   setDim(dim: boolean): void {

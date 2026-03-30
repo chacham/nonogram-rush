@@ -22,7 +22,7 @@ export class RowView extends Container {
     this.bg = new Graphics();
     this.addChild(this.bg);
 
-    this.hintView = new RowHintView(hintAreaWidth);
+    this.hintView = new RowHintView(hintAreaWidth, cellSize);
     this.addChild(this.hintView);
 
     this.cellContainer = new Container();
