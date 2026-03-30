@@ -47,7 +47,7 @@ export class FinaleView extends Container {
     this.visible = false;
   }
 
-  show(records: ClearedRowRecord[], onComplete: () => void): void {
+  show(records: ClearedRowRecord[], elapsedMs: number, onComplete: () => void): void {
     this.visible = true;
     this._isScrolling = false;
     this.artContainer.removeChildren();
@@ -81,7 +81,12 @@ export class FinaleView extends Container {
       }
     }
 
-    this.subtitleText.text = `${sorted.length} rows | scroll to reveal`;
+    const totalSec = Math.floor(elapsedMs / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    const timeStr = `${min}:${sec.toString().padStart(2, '0')}`;
+
+    this.subtitleText.text = `${sorted.length} rows | ${timeStr} | scroll to reveal`;
 
     const finalY = CANVAS_HEIGHT / 2 - artHeight / 2;
     const scrollDist = artHeight + CANVAS_HEIGHT;

@@ -23,6 +23,7 @@ export class UIOverlay extends Container {
   private comboText: Text;
   private linesText: Text;
   private heartsText: Text;
+  private timeText: Text;
   private keysText: Text;
   private messageText: Text;
   private panelBg: Graphics;
@@ -46,6 +47,7 @@ export class UIOverlay extends Container {
     this.comboText = this.makeText('', UI_FONT_SIZE_LARGE, COLORS.comboText);
     this.linesText = this.makeText('LINES: 0', UI_FONT_SIZE_MEDIUM, COLORS.uiText);
     this.heartsText = this.makeText('', UI_FONT_SIZE_LARGE, COLORS.heartFull);
+    this.timeText = this.makeText('TIME  0:00', UI_FONT_SIZE_MEDIUM, COLORS.hintText);
     this.keysText = this.makeText('', UI_FONT_SIZE_SMALL, COLORS.hintTextDim);
     this.messageText = this.makeText('', UI_FONT_SIZE_MESSAGE, COLORS.gameOverText);
 
@@ -82,6 +84,9 @@ export class UIOverlay extends Container {
 
     this.linesText.x = PANEL_X;
     this.linesText.y = y; y += UI_LINE_HEIGHT;
+
+    this.timeText.x = PANEL_X;
+    this.timeText.y = y; y += UI_LINE_HEIGHT;
 
     this.comboText.x = PANEL_X;
     this.comboText.y = y; y += UI_LINE_HEIGHT;
@@ -154,6 +159,13 @@ export class UIOverlay extends Container {
 
   showStageClear(): void {
     this.showMessage('STAGE CLEAR!\nPreparing finale...', COLORS.scoreText);
+  }
+
+  updateTime(elapsedMs: number): void {
+    const totalSec = Math.floor(elapsedMs / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    this.timeText.text = `TIME  ${min}:${sec.toString().padStart(2, '0')}`;
   }
 
   updateKeys(bindings: KeyBindings): void {

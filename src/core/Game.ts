@@ -46,6 +46,8 @@ export class Game {
   private pushInterval: number;
   private freezeTimer = 0;
   private unbindKeyboard?: () => void;
+  private stageStartTime = 0;
+  private elapsedMs = 0;
 
   constructor(app: Application) {
     this.app = app;
@@ -173,6 +175,8 @@ export class Game {
     this.pushInterval = PUSH_INTERVAL_BASE;
     this.pushTimer = 0;
     this.freezeTimer = 0;
+    this.stageStartTime = 0;
+    this.elapsedMs = 0;
 
     this.input.init(GRID_COLS, 0);
     this.gridContainer.setRows(this.rows);
@@ -180,6 +184,7 @@ export class Game {
     this.ui.hideMessage();
     this.ui.updateScore(this.scoring.current);
     this.ui.updateHearts(this.hearts);
+    this.ui.updateTime(0);
     this.ui.updateKeys(this.input.getBindings());
     this.sm.forceState(GameState.IDLE);
   }
@@ -210,6 +215,11 @@ export class Game {
   private update(deltaMS: number): void {
     const state = this.sm.current;
 
+    if (this.stageStartTime > 0) {
+      this.elapsedMs += deltaMS;
+      this.ui.updateTime(this.elapsedMs);
+    }
+
     if (state === GameState.IDLE) {
       if (this.freezeTimer > 0) {
         this.freezeTimer -= deltaMS;
@@ -238,6 +248,10 @@ export class Game {
 
   private triggerRowPush(): void {
     if (!this.sm.transition(GameState.PUSHING)) return;
+
+    if (this.stageStartTime === 0 && this.rows.length === 0) {
+      this.stageStartTime = Date.now();
+    }
 
     let newRow: RowData;
     if (this.playMode === PlayMode.STAGE) {
@@ -410,7 +424,7 @@ export class Game {
 
   private showFinale(): void {
     this.ui.hideMessage();
-    this.finaleView.show(this.buffer.getAll(), () => {
+    this.finaleView.show(this.buffer.getAll(), this.elapsedMs, () => {
       this.finaleView.hide();
       this.showMenu();
     });
