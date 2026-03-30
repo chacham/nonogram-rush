@@ -31,7 +31,7 @@ export function generateRow(cols: number = GRID_COLS, fillRatio: number = ROW_FI
   };
 }
 
-export function createRowFromSolution(solution: CellType[]): RowData {
+export function createRowFromSolution(solution: CellType[], stageRowIndex?: number): RowData {
   const solutionAsStates = solutionToCellStates(solution);
   const hints = calculateHints(solutionAsStates);
   const cells = new Array<CellState>(solution.length).fill(CellState.EMPTY);
@@ -42,6 +42,7 @@ export function createRowFromSolution(solution: CellType[]): RowData {
     cells,
     cleared: false,
     originalIndex: rowCounter++,
+    stageRowIndex,
   };
 }
 

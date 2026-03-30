@@ -59,15 +59,17 @@ export class FinaleView extends Container {
       return;
     }
 
-    const cols = records[0]!.solution.length;
+    const sorted = [...records].sort((a, b) => a.originalRowIndex - b.originalRowIndex);
+
+    const cols = sorted[0]!.solution.length;
     const rowHeight = FINALE_CELL_SIZE + FINALE_CELL_GAP;
     const artWidth = cols * rowHeight - FINALE_CELL_GAP;
-    const artHeight = records.length * rowHeight;
+    const artHeight = sorted.length * rowHeight;
 
     const startX = (CANVAS_WIDTH - artWidth) / 2;
 
-    for (let r = 0; r < records.length; r++) {
-      const record = records[r]!;
+    for (let r = 0; r < sorted.length; r++) {
+      const record = sorted[r]!;
       for (let c = 0; c < cols; c++) {
         const cell = new Graphics();
         const isFilled = record.solution[c] === CellType.FILLED;
@@ -79,7 +81,7 @@ export class FinaleView extends Container {
       }
     }
 
-    this.subtitleText.text = `${records.length} rows | scroll to reveal`;
+    this.subtitleText.text = `${sorted.length} rows | scroll to reveal`;
 
     const finalY = CANVAS_HEIGHT / 2 - artHeight / 2;
     const scrollDist = artHeight + CANVAS_HEIGHT;

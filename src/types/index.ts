@@ -20,6 +20,7 @@ export interface RowData {
   cells: CellState[];
   cleared: boolean;
   originalIndex: number;
+  stageRowIndex?: number;
 }
 
 export enum GameMode {
@@ -69,4 +70,5 @@ export interface ScoreState {
 export interface ClearedRowRecord {
   solution: CellType[];
   clearedAt: number;
+  originalRowIndex: number;
 }

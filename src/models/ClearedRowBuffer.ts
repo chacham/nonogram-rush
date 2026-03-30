@@ -4,8 +4,8 @@ import { SESSION_STORAGE_KEY } from '@/config/GameConfig.js';
 export class ClearedRowBuffer {
   private records: ClearedRowRecord[] = [];
 
-  push(solution: CellType[]): void {
-    this.records.push({ solution: [...solution], clearedAt: Date.now() });
+  push(solution: CellType[], originalRowIndex: number): void {
+    this.records.push({ solution: [...solution], clearedAt: Date.now(), originalRowIndex });
   }
 
   getAll(): ClearedRowRecord[] {

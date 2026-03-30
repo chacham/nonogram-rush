@@ -36,7 +36,7 @@ export class Game {
   private buffer: ClearedRowBuffer;
 
   private rows: RowData[] = [];
-  private rowQueue: CellType[][] = [];
+  private rowQueue: { solution: CellType[]; stageRowIndex: number }[] = [];
   private allStages: StageData[] = [...STAGES];
   private hearts = MAX_HEARTS;
   private mode: GameMode = GameMode.ASSISTED;
@@ -160,7 +160,11 @@ export class Game {
 
   private startNewGame(): void {
     this.rows = [];
-    this.rowQueue = this.stageData ? [...this.stageData.rows] : [];
+    if (this.stageData) {
+      this.rowQueue = this.stageData.rows.map((solution, idx) => ({ solution, stageRowIndex: idx }));
+    } else {
+      this.rowQueue = [];
+    }
     this.hearts = MAX_HEARTS;
     this.scoring.reset();
     this.hintReveal.reset();
@@ -237,12 +241,12 @@ export class Game {
 
     let newRow: RowData;
     if (this.playMode === PlayMode.STAGE) {
-      const solution = this.rowQueue.pop();
-      if (!solution) {
+      const item = this.rowQueue.pop();
+      if (!item) {
         this.sm.forceState(GameState.IDLE);
         return;
       }
-      newRow = createRowFromSolution(solution);
+      newRow = createRowFromSolution(item.solution, item.stageRowIndex);
     } else {
       newRow = generateRow(GRID_COLS);
     }
@@ -341,7 +345,7 @@ export class Game {
 
     const rowData = this.rows[rowIndex]!;
     rowData.cleared = true;
-    this.buffer.push(rowData.solution);
+    this.buffer.push(rowData.solution, rowData.stageRowIndex ?? rowData.originalIndex);
     this.buffer.saveToSession();
 
     const { isCombo } = this.scoring.onLinesCleared(1);
