@@ -1,6 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { ClearedRowRecord, CellType } from '@/types/index.js';
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/config/GameConfig.js';
 import {
   FINALE_CELL_SIZE, FINALE_CELL_GAP, FINALE_SCROLL_SPEED,
   FINALE_TITLE_Y, FINALE_SUBTITLE_Y,
@@ -14,20 +13,19 @@ export class FinaleView extends Container {
   private titleText: Text;
   private subtitleText: Text;
   private _isScrolling = false;
+  private _cw = 0;
+  private _ch = 0;
 
   constructor() {
     super();
 
     this.overlay = new Graphics();
-    this.overlay.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    this.overlay.fill({ color: COLORS.finaleBackground, alpha: 0.97 });
     this.addChild(this.overlay);
 
     this.titleText = new Text({
       text: 'YOUR MASTERPIECE',
       style: { fontFamily: 'monospace', fontSize: 28, fill: COLORS.uiAccent },
     });
-    this.titleText.x = CANVAS_WIDTH / 2;
     this.titleText.y = FINALE_TITLE_Y;
     this.titleText.anchor.set(0.5, 0);
     this.addChild(this.titleText);
@@ -36,7 +34,6 @@ export class FinaleView extends Container {
       text: '',
       style: { fontFamily: 'monospace', fontSize: 14, fill: COLORS.hintText },
     });
-    this.subtitleText.x = CANVAS_WIDTH / 2;
     this.subtitleText.y = FINALE_SUBTITLE_Y;
     this.subtitleText.anchor.set(0.5, 0);
     this.addChild(this.subtitleText);
@@ -50,8 +47,16 @@ export class FinaleView extends Container {
   show(records: ClearedRowRecord[], elapsedMs: number, onComplete: () => void): void {
     this.visible = true;
     this._isScrolling = false;
+    this._cw = this.parent?.width ?? 798;
+    this._ch = this.parent?.height ?? 872;
     this.artContainer.removeChildren();
-    this.artContainer.y = CANVAS_HEIGHT;
+
+    this.overlay.clear();
+    this.overlay.rect(0, 0, this._cw, this._ch);
+    this.overlay.fill({ color: COLORS.finaleBackground, alpha: 0.97 });
+
+    this.titleText.x = this._cw / 2;
+    this.subtitleText.x = this._cw / 2;
 
     if (records.length === 0) {
       this.subtitleText.text = 'No rows cleared!';
@@ -66,7 +71,7 @@ export class FinaleView extends Container {
     const artWidth = cols * rowHeight - FINALE_CELL_GAP;
     const artHeight = sorted.length * rowHeight;
 
-    const startX = (CANVAS_WIDTH - artWidth) / 2;
+    const startX = (this._cw - artWidth) / 2;
 
     for (let r = 0; r < sorted.length; r++) {
       const record = sorted[r]!;
@@ -88,8 +93,9 @@ export class FinaleView extends Container {
 
     this.subtitleText.text = `${sorted.length} rows | ${timeStr} | scroll to reveal`;
 
-    const finalY = CANVAS_HEIGHT / 2 - artHeight / 2;
-    const scrollDist = artHeight + CANVAS_HEIGHT;
+    this.artContainer.y = this._ch;
+    const finalY = this._ch / 2 - artHeight / 2;
+    const scrollDist = artHeight + this._ch;
     const scrollDuration = scrollDist / FINALE_SCROLL_SPEED;
 
     this._isScrolling = true;

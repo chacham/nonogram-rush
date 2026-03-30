@@ -6,6 +6,7 @@ import {
   STAGE_GOAL_LINES, COMBO_FREEZE_DURATION, MAX_HEARTS,
 } from '@/config/GameConfig.js';
 import {
+  canvasWidth, canvasHeight,
   gridWidth, gridHeight,
 } from '@/config/LayoutConfig.js';
 import { GameState, GameMode, PlayMode, CellState, CellType, RowData, StageData } from '@/types/index.js';
@@ -221,6 +222,8 @@ export class Game {
   }
 
   private initSceneForCols(cols: number): void {
+    this.app.renderer.resize(canvasWidth(cols), canvasHeight(GRID_VISIBLE_ROWS, cols));
+
     if (this.gridContainer) {
       this.scene.removeChild(this.gridContainer);
       this.gridContainer.destroy({ children: true });
