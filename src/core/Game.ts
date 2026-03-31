@@ -40,6 +40,7 @@ export class Game {
 
   private rows: RowData[] = [];
   private rowQueue: { solution: CellType[]; stageRowIndex: number }[] = [];
+  private pendingClearRows: number[] = [];
   private allStages: StageData[] = [...STAGES];
   private hearts = MAX_HEARTS;
   private mode: GameMode = GameMode.ASSISTED;
@@ -177,10 +178,15 @@ export class Game {
     this.input.onMoveCursor = (row, col) => {
       this.gridContainer.setCursor(row, col);
     };
+
+    this.input.onDragEnd = () => {
+      this.processPendingClears();
+    };
   }
 
   private startNewGame(): void {
     this.rows = [];
+    this.pendingClearRows = [];
     if (this.stageData) {
       this.rowQueue = this.stageData.rows.map((solution, idx) => ({ solution, stageRowIndex: idx }));
     } else {
@@ -424,8 +430,73 @@ this.gridContainer.setVisibleRowCount(this.rows.length);
     if (!rowData || rowData.cleared) return;
 
     if (validateRow(rowData.cells, rowData.hints)) {
-      this.clearRow(rowIndex);
+      if (this.input.isDragging) {
+        rowData.cleared = true;
+        this.gridContainer.animateClearRows([rowIndex], () => {});
+        this.pendingClearRows.push(rowIndex);
+      } else {
+        this.clearRow(rowIndex);
+      }
     }
+  }
+
+  private processPendingClears(): void {
+    if (this.pendingClearRows.length === 0) return;
+    const indices = [...this.pendingClearRows];
+    this.pendingClearRows = [];
+    this.clearRows(indices);
+  }
+
+  private clearRows(indices: number[]): void {
+    if (indices.length === 0) return;
+    indices.sort((a, b) => b - a);
+    for (const idx of indices) {
+      const rowData = this.rows[idx];
+      if (!rowData || rowData.cleared) continue;
+      rowData.cleared = true;
+      this.buffer.push(rowData.solution, rowData.stageRowIndex ?? rowData.originalIndex);
+    }
+    this.buffer.saveToSession();
+
+    const clearedCount = indices.length;
+    const { isCombo } = this.scoring.onLinesCleared(clearedCount);
+    const stageQueueEmpty = this.playMode === PlayMode.STAGE && this.rowQueue.length === 0;
+    if (!stageQueueEmpty) {
+      this.hintReveal.onRowCleared();
+    }
+    this.hearts = Math.min(MAX_HEARTS, this.hearts + clearedCount);
+    this.ui.updateScore(this.scoring.current);
+    this.ui.updateHearts(this.hearts);
+
+    const oldInterval = this.pushInterval;
+    const newRowCount = Math.max(0, this.rows.length - clearedCount);
+    this.pushInterval = this.calcPushInterval(newRowCount);
+    this.pushTimer = (this.pushTimer / oldInterval) * this.pushInterval;
+    this.ui.updatePushTimer(this.pushTimer / this.pushInterval);
+
+    if (isCombo) {
+      this.shakeScene(8, 0.25);
+    }
+
+    this.rows = this.rows.filter((_, i) => !indices.includes(i));
+
+    const stageComplete = this.playMode === PlayMode.STAGE
+      && this.rowQueue.length === 0
+      && this.rows.length === 0;
+    const endlessGoalReached = this.playMode === PlayMode.ENDLESS
+      && this.scoring.current.linesCleared >= STAGE_GOAL_LINES;
+
+    if (stageComplete || endlessGoalReached) {
+      this.sm.forceState(GameState.FINALE);
+      this.ui.showStageClear();
+      setTimeout(() => this.showFinale(), 1500);
+      return;
+    }
+
+    this.gridContainer.removeRowsAndRebuild(indices, this.rows);
+    this.input.updateRowCount(this.rows.length);
+    this.gridContainer.setVisibleRowCount(this.rows.length);
+    this.recheckAllRows();
   }
 
   private clearRow(rowIndex: number): void {

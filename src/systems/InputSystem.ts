@@ -17,6 +17,11 @@ export class InputSystem {
   onCellPaint?: (row: number, col: number, state: CellState) => void;
   onMoveCursor?: (row: number, col: number) => void;
   onPaintModeChange?: (mode: PaintMode) => void;
+  onDragEnd?: () => void;
+
+  get isDragging(): boolean {
+    return this.isPointerDown;
+  }
 
   private totalRows = 0;
   private totalCols = 0;
@@ -98,13 +103,18 @@ export class InputSystem {
       this.isPointerDown = false;
       this.dragMode = null;
       this.dragStartState = null;
+      this.onDragEnd?.();
     };
   }
 
   cancelDrag(): void {
+    const wasDragging = this.isPointerDown;
     this.isPointerDown = false;
     this.dragMode = null;
     this.dragStartState = null;
+    if (wasDragging) {
+      this.onDragEnd?.();
+    }
   }
 
   bindTouchOnGrid(gridContainer: GridContainer): void {
@@ -131,6 +141,7 @@ export class InputSystem {
     gridContainer.onCellPointerUp = () => {
       this.isPointerDown = false;
       this.dragStartState = null;
+      this.onDragEnd?.();
     };
   }
 
