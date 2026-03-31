@@ -13,7 +13,7 @@ export {
 export const GRID_COLS = 10;
 
 export const PUSH_INTERVAL_BASE = 16000;
-export const PUSH_INTERVAL_MIN = 1000;
+export const PUSH_INTERVAL_MIN = 300;
 export const PUSH_INTERVAL_SCALE = 1.0;
 export const PUSH_ANIMATION_DURATION = 300;
 export const CLEAR_ANIMATION_DURATION = 400;
