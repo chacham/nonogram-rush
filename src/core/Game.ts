@@ -548,6 +548,7 @@ this.gridContainer.setVisibleRowCount(this.rows.length);
 
       this.gridContainer.removeRowsAndRebuild([rowIndex], this.rows);
       this.input.updateRowCount(this.rows.length);
+      this.gridContainer.setVisibleRowCount(this.rows.length);
 
       this.sm.forceState(GameState.IDLE);
       this.recheckAllRows();
