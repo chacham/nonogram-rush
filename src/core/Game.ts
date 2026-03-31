@@ -453,9 +453,11 @@ this.gridContainer.setVisibleRowCount(this.rows.length);
     indices.sort((a, b) => b - a);
     for (const idx of indices) {
       const rowData = this.rows[idx];
-      if (!rowData || rowData.cleared) continue;
-      rowData.cleared = true;
-      this.buffer.push(rowData.solution, rowData.stageRowIndex ?? rowData.originalIndex);
+      if (!rowData) continue;
+      if (!rowData.cleared) {
+        rowData.cleared = true;
+        this.buffer.push(rowData.solution, rowData.stageRowIndex ?? rowData.originalIndex);
+      }
     }
     this.buffer.saveToSession();
 
