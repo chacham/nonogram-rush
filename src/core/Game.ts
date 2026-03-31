@@ -336,7 +336,7 @@ export class Game {
 
     let newRow: RowData;
     if (this.playMode === PlayMode.STAGE) {
-      const item = this.rowQueue.pop();
+      const item = this.rowQueue.shift();
       if (!item) {
         this.sm.forceState(GameState.IDLE);
         return;
