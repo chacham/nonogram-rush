@@ -11,6 +11,9 @@ import { COLORS } from '@/config/Theme.js';
 import { ScoreState, KeyBindings, PaintMode } from '@/types/index.js';
 import { keyCodeToLabel } from '@/systems/KeyBindingsManager.js';
 
+const BTN_SIZE = 48;
+const BTN_GAP = 4;
+
 export class UIOverlay extends Container {
   private scoreText: Text;
   private levelText: Text;
@@ -23,18 +26,29 @@ export class UIOverlay extends Container {
   private panelBg: Graphics;
   private timerBarBg: Graphics;
   private timerBarFill: Graphics;
-  private paintModeBtn: Container;
-  private paintModeBg: Graphics;
-  private paintModeText: Text;
+
+  private touchControlsContainer: Container;
+  private dpadUp: Container;
+  private dpadDown: Container;
+  private dpadLeft: Container;
+  private dpadRight: Container;
+  private fillBtn: Container;
+  private crossBtn: Container;
+
   private panelX = 0;
   private timerBarW = 0;
   private timerBarY = 0;
   private messageX = 0;
   private messageY = 0;
-  private paintModeBtnX = 0;
-  private paintModeBtnY = 0;
+  private touchControlsY = 0;
 
   onPaintModeToggle?: () => void;
+  onDpadUp?: () => void;
+  onDpadDown?: () => void;
+  onDpadLeft?: () => void;
+  onDpadRight?: () => void;
+  onFillPress?: () => void;
+  onCrossPress?: () => void;
 
   constructor() {
     super();
@@ -59,43 +73,122 @@ export class UIOverlay extends Container {
     this.messageText.alpha = 0;
     this.addChild(this.messageText);
 
-    this.paintModeBtn = new Container();
-    this.paintModeBtn.eventMode = 'static';
-    this.paintModeBtn.cursor = 'pointer';
-    this.paintModeBtn.on('pointerdown', () => this.onPaintModeToggle?.());
-    this.paintModeBg = new Graphics();
-    this.paintModeBtn.addChild(this.paintModeBg);
-    this.paintModeText = new Text({
-      text: 'FILL',
-      style: { fontFamily: 'monospace', fontSize: 12, fill: COLORS.uiAccent, fontWeight: 'bold' },
+    this.touchControlsContainer = new Container();
+    this.addChild(this.touchControlsContainer);
+    this.touchControlsContainer.visible = false;
+
+    this.dpadUp = this.createDPadButton('▲', COLORS.uiAccent);
+    this.dpadDown = this.createDPadButton('▼', COLORS.uiAccent);
+    this.dpadLeft = this.createDPadButton('◀', COLORS.uiAccent);
+    this.dpadRight = this.createDPadButton('▶', COLORS.uiAccent);
+    this.fillBtn = this.createActionButton('FILL', COLORS.cellFilled);
+    this.crossBtn = this.createActionButton('×', COLORS.hintText);
+
+    this.dpadUp.on('pointerdown', () => this.onDpadUp?.());
+    this.dpadDown.on('pointerdown', () => this.onDpadDown?.());
+    this.dpadLeft.on('pointerdown', () => this.onDpadLeft?.());
+    this.dpadRight.on('pointerdown', () => this.onDpadRight?.());
+    this.fillBtn.on('pointerdown', () => this.onFillPress?.());
+    this.crossBtn.on('pointerdown', () => this.onCrossPress?.());
+
+    this.touchControlsContainer.addChild(this.dpadUp);
+    this.touchControlsContainer.addChild(this.dpadDown);
+    this.touchControlsContainer.addChild(this.dpadLeft);
+    this.touchControlsContainer.addChild(this.dpadRight);
+    this.touchControlsContainer.addChild(this.fillBtn);
+    this.touchControlsContainer.addChild(this.crossBtn);
+  }
+
+  private createDPadButton(label: string, color: number): Container {
+    const btn = new Container();
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+
+    const bg = new Graphics();
+    bg.roundRect(-BTN_SIZE / 2, -BTN_SIZE / 2, BTN_SIZE, BTN_SIZE, 8);
+    bg.fill({ color: 0x1a1a2e });
+    bg.roundRect(-BTN_SIZE / 2, -BTN_SIZE / 2, BTN_SIZE, BTN_SIZE, 8);
+    bg.stroke({ color, width: 2, alpha: 0.8 });
+    btn.addChild(bg);
+
+    const text = new Text({
+      text: label,
+      style: { fontFamily: 'monospace', fontSize: 20, fill: color, fontWeight: 'bold' },
     });
-    this.paintModeText.anchor.set(0.5);
-    this.paintModeBtn.addChild(this.paintModeText);
-    this.addChild(this.paintModeBtn);
-    this.paintModeBtn.visible = false;
+    text.anchor.set(0.5);
+    btn.addChild(text);
+
+    btn.on('pointerover', () => {
+      bg.clear();
+      bg.roundRect(-BTN_SIZE / 2, -BTN_SIZE / 2, BTN_SIZE, BTN_SIZE, 8);
+      bg.fill({ color, alpha: 0.2 });
+      bg.roundRect(-BTN_SIZE / 2, -BTN_SIZE / 2, BTN_SIZE, BTN_SIZE, 8);
+      bg.stroke({ color, width: 2, alpha: 1 });
+    });
+
+    btn.on('pointerout', () => {
+      bg.clear();
+      bg.roundRect(-BTN_SIZE / 2, -BTN_SIZE / 2, BTN_SIZE, BTN_SIZE, 8);
+      bg.fill({ color: 0x1a1a2e });
+      bg.roundRect(-BTN_SIZE / 2, -BTN_SIZE / 2, BTN_SIZE, BTN_SIZE, 8);
+      bg.stroke({ color, width: 2, alpha: 0.8 });
+    });
+
+    return btn;
+  }
+
+  private createActionButton(label: string, color: number): Container {
+    const btn = new Container();
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+
+    const w = 80;
+    const h = 48;
+    const bg = new Graphics();
+    bg.roundRect(-w / 2, -h / 2, w, h, 8);
+    bg.fill({ color: 0x1a1a2e });
+    bg.roundRect(-w / 2, -h / 2, w, h, 8);
+    bg.stroke({ color, width: 2, alpha: 0.8 });
+    btn.addChild(bg);
+
+    const text = new Text({
+      text: label,
+      style: { fontFamily: 'monospace', fontSize: 16, fill: color, fontWeight: 'bold' },
+    });
+    text.anchor.set(0.5);
+    btn.addChild(text);
+
+    btn.on('pointerover', () => {
+      bg.clear();
+      bg.roundRect(-w / 2, -h / 2, w, h, 8);
+      bg.fill({ color, alpha: 0.2 });
+      bg.roundRect(-w / 2, -h / 2, w, h, 8);
+      bg.stroke({ color, width: 2, alpha: 1 });
+    });
+
+    btn.on('pointerout', () => {
+      bg.clear();
+      bg.roundRect(-w / 2, -h / 2, w, h, 8);
+      bg.fill({ color: 0x1a1a2e });
+      bg.roundRect(-w / 2, -h / 2, w, h, 8);
+      bg.stroke({ color, width: 2, alpha: 0.8 });
+    });
+
+    return btn;
   }
 
   setTouchMode(enabled: boolean): void {
-    this.paintModeBtn.visible = enabled;
+    this.touchControlsContainer.visible = enabled;
     this.keysText.visible = !enabled;
   }
 
   setPaintMode(mode: PaintMode): void {
     if (mode === 'fill') {
-      this.paintModeText.text = 'FILL';
-      this.paintModeBg.clear();
-      this.paintModeBg.roundRect(-30, -14, 60, 28, 4);
-      this.paintModeBg.fill({ color: COLORS.cellFilled, alpha: 0.2 });
-      this.paintModeBg.roundRect(-30, -14, 60, 28, 4);
-      this.paintModeBg.stroke({ color: COLORS.cellFilled, width: 1.5 });
+      this.fillBtn.alpha = 1;
+      this.crossBtn.alpha = 0.6;
     } else {
-      this.paintModeText.text = '×';
-      this.paintModeText.style.fill = COLORS.hintText;
-      this.paintModeBg.clear();
-      this.paintModeBg.roundRect(-30, -14, 60, 28, 4);
-      this.paintModeBg.fill({ color: COLORS.cellEmpty, alpha: 0.1 });
-      this.paintModeBg.roundRect(-30, -14, 60, 28, 4);
-      this.paintModeBg.stroke({ color: COLORS.hintText, width: 1.5 });
+      this.fillBtn.alpha = 0.6;
+      this.crossBtn.alpha = 1;
     }
   }
 
@@ -105,18 +198,35 @@ export class UIOverlay extends Container {
     this.timerBarY = COL_HINT_AREA_HEIGHT + gridH + 8;
     this.messageX = hintAreaWidth + gridW / 2;
     this.messageY = BASE_CANVAS_HEIGHT / 2;
-    this.paintModeBtnX = hintAreaWidth + 10;
-    this.paintModeBtnY = COL_HINT_AREA_HEIGHT + gridH + 24;
+    this.touchControlsY = COL_HINT_AREA_HEIGHT + gridH + TIMER_BAR_HEIGHT + 16;
 
     this.drawPanelBg();
     this.layoutElements();
     this.drawTimerBar(0);
-    this.layoutPaintModeBtn();
+    this.layoutTouchControls(hintAreaWidth, gridW);
   }
 
-  private layoutPaintModeBtn(): void {
-    this.paintModeBtn.x = this.paintModeBtnX + 30;
-    this.paintModeBtn.y = this.paintModeBtnY;
+  private layoutTouchControls(hintAreaWidth: number, gridW: number): void {
+    const centerX = hintAreaWidth + gridW / 2;
+    const y = this.touchControlsY + 60;
+
+    this.dpadUp.x = centerX;
+    this.dpadUp.y = y - BTN_SIZE - BTN_GAP;
+
+    this.dpadDown.x = centerX;
+    this.dpadDown.y = y + BTN_SIZE + BTN_GAP;
+
+    this.dpadLeft.x = centerX - BTN_SIZE - BTN_GAP;
+    this.dpadLeft.y = y;
+
+    this.dpadRight.x = centerX + BTN_SIZE + BTN_GAP;
+    this.dpadRight.y = y;
+
+    this.fillBtn.x = centerX - 60;
+    this.fillBtn.y = y + BTN_SIZE + BTN_GAP + 20;
+
+    this.crossBtn.x = centerX + 60;
+    this.crossBtn.y = y + BTN_SIZE + BTN_GAP + 20;
   }
 
   private makeText(content: string, size: number, color: number): Text {

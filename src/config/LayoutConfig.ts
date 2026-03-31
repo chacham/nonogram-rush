@@ -16,6 +16,8 @@ export const UI_FONT_SIZE_SMALL = 13;
 export const UI_FONT_SIZE_MESSAGE = 24;
 export const UI_LINE_HEIGHT = 28;
 
+export const TOUCH_CONTROLS_HEIGHT = 120;
+
 export const FINALE_CELL_SIZE = 8;
 export const FINALE_CELL_GAP = 1;
 export const FINALE_SCROLL_SPEED = 80;
@@ -53,8 +55,9 @@ export function canvasWidth(cols: number): number {
   return calcHintAreaWidth(cols) + gridWidth(cols) + UI_PANEL_WIDTH;
 }
 
-export function canvasHeight(visibleRows: number, cols: number): number {
-  return COL_HINT_AREA_HEIGHT + gridHeight(visibleRows, cols) + TIMER_BAR_HEIGHT + 16;
+export function canvasHeight(visibleRows: number, cols: number, touchMode: boolean = false): number {
+  const base = COL_HINT_AREA_HEIGHT + gridHeight(visibleRows, cols) + TIMER_BAR_HEIGHT + 16;
+  return touchMode ? base + TOUCH_CONTROLS_HEIGHT : base;
 }
 
 export const GRID_VISIBLE_ROWS = 15;
@@ -64,3 +67,7 @@ export const GRID_WIDTH = BASE_GRID_WIDTH;
 export const GRID_HEIGHT = BASE_GRID_HEIGHT;
 export const CANVAS_WIDTH = BASE_GRID_WIDTH;
 export const CANVAS_HEIGHT = BASE_CANVAS_HEIGHT;
+
+export function isTouchDevice(): boolean {
+  return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+}

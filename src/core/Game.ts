@@ -6,15 +6,14 @@ import {
   STAGE_GOAL_LINES, COMBO_FREEZE_DURATION, MAX_HEARTS,
 } from '@/config/GameConfig.js';
 import {
-  canvasWidth, canvasHeight,
-  gridWidth, gridHeight,
+  canvasWidth, canvasHeight, gridWidth, gridHeight, isTouchDevice,
 } from '@/config/LayoutConfig.js';
 import { GameState, GameMode, PlayMode, CellState, CellType, RowData, StageData, InputMode } from '@/types/index.js';
 import { StateMachine, createGameStateMachine } from '@/core/StateMachine.js';
 import { GridContainer } from '@/views/GridContainer.js';
 import { UIOverlay } from '@/views/UIOverlay.js';
 import { FinaleView } from '@/views/FinaleView.js';
-import { MenuView, loadInputMode } from '@/views/MenuView.js';
+import { MenuView } from '@/views/MenuView.js';
 import { SettingsView } from '@/views/SettingsView.js';
 import { ScoringSystem } from '@/systems/ScoringSystem.js';
 import { InputSystem } from '@/systems/InputSystem.js';
@@ -52,9 +51,9 @@ export class Game {
   private unbindKeyboard?: () => void;
   private stageStartTime = 0;
   private elapsedMs = 0;
-  private inputMode: InputMode = 'keyboard';
+  private inputMode: InputMode;
 
-  constructor(app: Application) {
+  constructor(app: Application, touchMode: boolean) {
     this.app = app;
     this.sm = createGameStateMachine();
     this.scoring = new ScoringSystem();
@@ -62,6 +61,7 @@ export class Game {
     this.hintReveal = new ColHintRevealSystem(GRID_COLS);
     this.buffer = new ClearedRowBuffer();
     this.pushInterval = PUSH_INTERVAL_BASE;
+    this.inputMode = touchMode ? 'touchscreen' : 'keyboard';
   }
 
   private tickHandler!: (ticker: Ticker) => void;
@@ -95,29 +95,22 @@ export class Game {
     };
 
     this.ui = new UIOverlay();
-    this.ui.onPaintModeToggle = () => {
-      this.input.togglePaintMode();
-      this.ui.setPaintMode(this.input.paintMode);
-    };
+    this.ui.onDpadUp = () => this.moveCursor(-1, 0);
+    this.ui.onDpadDown = () => this.moveCursor(1, 0);
+    this.ui.onDpadLeft = () => this.moveCursor(0, -1);
+    this.ui.onDpadRight = () => this.moveCursor(0, 1);
+    this.ui.onFillPress = () => this.triggerMarkAtCursor(CellState.FILLED);
+    this.ui.onCrossPress = () => this.triggerMarkAtCursor(CellState.CROSSED);
     this.scene.addChild(this.ui);
 
     this.finaleView = new FinaleView();
     this.scene.addChild(this.finaleView);
 
-    this.inputMode = loadInputMode();
+    this.inputMode = isTouchDevice() ? 'touchscreen' : 'keyboard';
     this.menuView = new MenuView();
-    this.menuView.setInputMode(this.inputMode);
     this.menuView.onPlayStage = (stage) => this.startGame(PlayMode.STAGE, stage);
     this.menuView.onPlayEndless = () => this.startGame(PlayMode.ENDLESS);
     this.menuView.onSettings = () => this.showSettings();
-    this.menuView.onInputModeChange = (mode) => {
-      this.inputMode = mode;
-      this.ui.setTouchMode(mode === 'touchscreen');
-      if (mode === 'touchscreen') {
-        this.input.setPaintMode('fill');
-        this.ui.setPaintMode('fill');
-      }
-    };
     this.app.stage.addChild(this.menuView);
 
     this.settingsView = new SettingsView();
@@ -221,6 +214,27 @@ export class Game {
     this.sm.forceState(GameState.IDLE);
   }
 
+  private moveCursor(dRow: number, dCol: number): void {
+    if (this.inputMode !== 'touchscreen') return;
+    if (this.sm.current !== GameState.IDLE) return;
+    const { row, col } = this.input.cursor;
+    const newRow = row + dRow;
+    const newCol = col + dCol;
+    if (newRow < 0 || newRow >= this.rows.length || newCol < 0 || newCol >= this.gridContainer.cols) return;
+    this.input['cursorRow'] = newRow;
+    this.input['cursorCol'] = newCol;
+    this.gridContainer.setCursor(newRow, newCol);
+  }
+
+  private triggerMarkAtCursor(state: CellState): void {
+    if (this.inputMode !== 'touchscreen') return;
+    if (this.sm.current !== GameState.IDLE && this.sm.current !== GameState.PUSHING
+      && this.sm.current !== GameState.CLEARING) return;
+    const { row, col } = this.input.cursor;
+    if (row < 0 || col < 0) return;
+    this.handleCellMark(row, col, state);
+  }
+
   private showMenu(): void {
     this.scene.visible = false;
     this.settingsView.hide();
@@ -246,7 +260,8 @@ export class Game {
   }
 
   private initSceneForCols(cols: number): void {
-    this.app.renderer.resize(canvasWidth(cols), canvasHeight(GRID_VISIBLE_ROWS, cols));
+    const touchMode = this.inputMode === 'touchscreen';
+    this.app.renderer.resize(canvasWidth(cols), canvasHeight(GRID_VISIBLE_ROWS, cols, touchMode));
 
     if (this.gridContainer) {
       this.scene.removeChild(this.gridContainer);
