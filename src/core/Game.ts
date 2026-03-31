@@ -405,6 +405,7 @@ export class Game {
         this.hearts = Math.max(0, this.hearts - 1);
         this.ui.updateHearts(this.hearts);
         this.shakeScene(4, 0.12);
+        this.input.cancelDrag();
 
         const correct = rowData.solution[col] === CellType.FILLED
           ? CellState.FILLED

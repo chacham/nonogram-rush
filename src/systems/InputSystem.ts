@@ -101,6 +101,12 @@ export class InputSystem {
     };
   }
 
+  cancelDrag(): void {
+    this.isPointerDown = false;
+    this.dragMode = null;
+    this.dragStartState = null;
+  }
+
   bindTouchOnGrid(gridContainer: GridContainer): void {
     gridContainer.onCellPointerDown = (_rowIndex, _col, currentState, _button) => {
       this.isPointerDown = true;
