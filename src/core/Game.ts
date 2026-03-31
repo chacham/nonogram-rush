@@ -302,11 +302,12 @@ export class Game {
     }
 
     if (state === GameState.IDLE) {
-      if (this.freezeTimer > 0) {
-        this.freezeTimer -= deltaMS;
-        this.ui.updatePushTimer(0);
-        return;
-      }
+if (this.freezeTimer > 0) {
+      this.freezeTimer -= deltaMS;
+      const progress = this.pushTimer / this.pushInterval;
+      this.ui.updatePushTimer(progress);
+      return;
+    }
 
       this.gridContainer.setVisibleRowCount(this.rows.length);
 
@@ -453,9 +454,12 @@ export class Game {
     this.ui.updateScore(this.scoring.current);
     this.ui.updateHearts(this.hearts);
 
-    this.pushTimer = 0;
-    this.pushInterval = this.calcPushInterval(Math.max(0, this.rows.length - 1));
-    this.ui.updatePushTimer(0);
+    const oldInterval = this.pushInterval;
+    const newRowCount = Math.max(0, this.rows.length - 1);
+    this.pushInterval = this.calcPushInterval(newRowCount);
+    this.pushTimer = (this.pushTimer / oldInterval) * this.pushInterval;
+    const progress = this.pushTimer / this.pushInterval;
+    this.ui.updatePushTimer(progress);
 
     if (isCombo) {
       this.freezeTimer = COMBO_FREEZE_DURATION;
