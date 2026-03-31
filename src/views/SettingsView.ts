@@ -1,5 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/config/GameConfig.js';
+import { GRID_COLS, GRID_VISIBLE_ROWS } from '@/config/GameConfig.js';
+import { canvasWidth, canvasHeight, isTouchDevice } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import { KeyBindings } from '@/types/index.js';
 import { loadBindings, saveBindings, keyCodeToLabel } from '@/systems/KeyBindingsManager.js';
@@ -16,6 +17,9 @@ const ACTION_LABELS: Record<BindingAction, string> = {
 };
 
 const ACTION_ORDER: BindingAction[] = ['up', 'down', 'left', 'right', 'fill', 'cross'];
+
+const SETTINGS_W = canvasWidth(GRID_COLS);
+const SETTINGS_H = canvasHeight(GRID_VISIBLE_ROWS, GRID_COLS, isTouchDevice());
 
 interface KeyRow {
   action: BindingAction;
@@ -37,7 +41,7 @@ export class SettingsView extends Container {
     this.bindings = loadBindings();
 
     const bg = new Graphics();
-    bg.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    bg.rect(0, 0, SETTINGS_W, SETTINGS_H);
     bg.fill({ color: COLORS.background });
     this.addChild(bg);
 
@@ -46,7 +50,7 @@ export class SettingsView extends Container {
       style: { fontFamily: 'monospace', fontSize: 32, fill: COLORS.uiAccent, fontWeight: 'bold' },
     });
     title.anchor.set(0.5);
-    title.x = CANVAS_WIDTH / 2;
+    title.x = SETTINGS_W / 2;
     title.y = 60;
     this.addChild(title);
 
@@ -55,7 +59,7 @@ export class SettingsView extends Container {
       style: { fontFamily: 'monospace', fontSize: 12, fill: COLORS.hintTextDim },
     });
     subtitle.anchor.set(0.5);
-    subtitle.x = CANVAS_WIDTH / 2;
+    subtitle.x = SETTINGS_W / 2;
     subtitle.y = 95;
     this.addChild(subtitle);
 
@@ -77,7 +81,7 @@ export class SettingsView extends Container {
     const rowW = 280;
     const keyW = 100;
     const keyH = 36;
-    const cx = CANVAS_WIDTH / 2;
+    const cx = SETTINGS_W / 2;
 
     const label = new Text({
       text: ACTION_LABELS[action],
@@ -192,7 +196,7 @@ export class SettingsView extends Container {
     const btnW = 160;
     const btnH = 40;
     const btn = new Container();
-    btn.x = CANVAS_WIDTH / 2;
+    btn.x = SETTINGS_W / 2;
     btn.y = y;
     btn.eventMode = 'static';
     btn.cursor = 'pointer';

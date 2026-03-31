@@ -1,8 +1,11 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/config/GameConfig.js';
+import { GRID_COLS, GRID_VISIBLE_ROWS } from '@/config/GameConfig.js';
+import { canvasWidth, canvasHeight, isTouchDevice } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
 import { StageData, InputMode } from '@/types/index.js';
-import { isTouchDevice } from '@/config/LayoutConfig.js';
+
+const MENU_W = canvasWidth(GRID_COLS);
+const MENU_H = canvasHeight(GRID_VISIBLE_ROWS, GRID_COLS, isTouchDevice());
 
 export function detectInputMode(): InputMode {
   return isTouchDevice() ? 'touchscreen' : 'keyboard';
@@ -20,7 +23,7 @@ export class MenuView extends Container {
     super();
 
     const bg = new Graphics();
-    bg.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    bg.rect(0, 0, MENU_W, MENU_H);
     bg.fill({ color: COLORS.background });
     this.addChild(bg);
 
@@ -29,8 +32,8 @@ export class MenuView extends Container {
       style: { fontFamily: 'monospace', fontSize: 48, fill: COLORS.uiAccent, fontWeight: 'bold' },
     });
     title.anchor.set(0.5);
-    title.x = CANVAS_WIDTH / 2;
-    title.y = CANVAS_HEIGHT * 0.18;
+    title.x = MENU_W / 2;
+    title.y = MENU_H * 0.18;
     this.addChild(title);
 
     const subtitle = new Text({
@@ -38,11 +41,11 @@ export class MenuView extends Container {
       style: { fontFamily: 'monospace', fontSize: 36, fill: COLORS.cellFilled, fontWeight: 'bold' },
     });
     subtitle.anchor.set(0.5);
-    subtitle.x = CANVAS_WIDTH / 2;
-    subtitle.y = CANVAS_HEIGHT * 0.18 + 52;
+    subtitle.x = MENU_W / 2;
+    subtitle.y = MENU_H * 0.18 + 52;
     this.addChild(subtitle);
 
-    this.btnStartY = CANVAS_HEIGHT * 0.40;
+    this.btnStartY = MENU_H * 0.40;
     this.stageListContainer = new Container();
     this.addChild(this.stageListContainer);
 
@@ -51,8 +54,8 @@ export class MenuView extends Container {
       style: { fontFamily: 'monospace', fontSize: 12, fill: COLORS.hintTextDim },
     });
     version.anchor.set(0.5);
-    version.x = CANVAS_WIDTH / 2;
-    version.y = CANVAS_HEIGHT - 30;
+    version.x = MENU_W / 2;
+    version.y = MENU_H - 30;
     this.addChild(version);
 
     this.visible = false;
@@ -69,7 +72,7 @@ export class MenuView extends Container {
       style: { fontFamily: 'monospace', fontSize: 11, fill: COLORS.hintTextDim, letterSpacing: 2 },
     });
     stagesLabel.anchor.set(0.5);
-    stagesLabel.x = CANVAS_WIDTH / 2;
+    stagesLabel.x = MENU_W / 2;
     stagesLabel.y = y - 16;
     this.stageListContainer.addChild(stagesLabel);
 
@@ -91,7 +94,7 @@ export class MenuView extends Container {
     const target = parent ?? this;
 
     const btn = new Container();
-    btn.x = CANVAS_WIDTH / 2;
+    btn.x = MENU_W / 2;
     btn.y = y;
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
