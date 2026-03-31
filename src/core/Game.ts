@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import {
   GRID_COLS, GRID_VISIBLE_ROWS,
   PUSH_INTERVAL_BASE, PUSH_INTERVAL_MIN, PUSH_INTERVAL_SCALE,
-  STAGE_GOAL_LINES, COMBO_FREEZE_DURATION, MAX_HEARTS,
+  STAGE_GOAL_LINES, MAX_HEARTS,
 } from '@/config/GameConfig.js';
 import {
   canvasWidth, canvasHeight, gridWidth, gridHeight, isTouchDevice,
@@ -47,7 +47,6 @@ export class Game {
   private stageData?: StageData;
   private pushTimer = 0;
   private pushInterval: number;
-  private freezeTimer = 0;
   private unbindKeyboard?: () => void;
   private stageStartTime = 0;
   private elapsedMs = 0;
@@ -194,7 +193,6 @@ export class Game {
     resetRowCounter();
     this.pushInterval = PUSH_INTERVAL_BASE;
     this.pushTimer = 0;
-    this.freezeTimer = 0;
     this.stageStartTime = 0;
     this.elapsedMs = 0;
 
@@ -302,14 +300,7 @@ export class Game {
     }
 
     if (state === GameState.IDLE) {
-if (this.freezeTimer > 0) {
-      this.freezeTimer -= deltaMS;
-      const progress = this.pushTimer / this.pushInterval;
-      this.ui.updatePushTimer(progress);
-      return;
-    }
-
-      this.gridContainer.setVisibleRowCount(this.rows.length);
+this.gridContainer.setVisibleRowCount(this.rows.length);
 
       const shouldPush = this.playMode === PlayMode.ENDLESS || this.rowQueue.length > 0;
       if (!shouldPush) {
@@ -462,7 +453,6 @@ if (this.freezeTimer > 0) {
     this.ui.updatePushTimer(progress);
 
     if (isCombo) {
-      this.freezeTimer = COMBO_FREEZE_DURATION;
       this.shakeScene(8, 0.25);
     }
 
