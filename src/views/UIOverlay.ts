@@ -8,7 +8,7 @@ import {
   UI_FONT_SIZE_LARGE, UI_FONT_SIZE_MEDIUM, UI_FONT_SIZE_SMALL, UI_FONT_SIZE_MESSAGE, UI_LINE_HEIGHT,
 } from '@/config/LayoutConfig.js';
 import { COLORS } from '@/config/Theme.js';
-import { ScoreState, KeyBindings } from '@/types/index.js';
+import { ScoreState, KeyBindings, PaintMode } from '@/types/index.js';
 import { keyCodeToLabel } from '@/systems/KeyBindingsManager.js';
 
 export class UIOverlay extends Container {
@@ -23,11 +23,18 @@ export class UIOverlay extends Container {
   private panelBg: Graphics;
   private timerBarBg: Graphics;
   private timerBarFill: Graphics;
+  private paintModeBtn: Container;
+  private paintModeBg: Graphics;
+  private paintModeText: Text;
   private panelX = 0;
   private timerBarW = 0;
   private timerBarY = 0;
   private messageX = 0;
   private messageY = 0;
+  private paintModeBtnX = 0;
+  private paintModeBtnY = 0;
+
+  onPaintModeToggle?: () => void;
 
   constructor() {
     super();
@@ -51,6 +58,45 @@ export class UIOverlay extends Container {
     this.messageText.anchor.set(0.5);
     this.messageText.alpha = 0;
     this.addChild(this.messageText);
+
+    this.paintModeBtn = new Container();
+    this.paintModeBtn.eventMode = 'static';
+    this.paintModeBtn.cursor = 'pointer';
+    this.paintModeBtn.on('pointerdown', () => this.onPaintModeToggle?.());
+    this.paintModeBg = new Graphics();
+    this.paintModeBtn.addChild(this.paintModeBg);
+    this.paintModeText = new Text({
+      text: 'FILL',
+      style: { fontFamily: 'monospace', fontSize: 12, fill: COLORS.uiAccent, fontWeight: 'bold' },
+    });
+    this.paintModeText.anchor.set(0.5);
+    this.paintModeBtn.addChild(this.paintModeText);
+    this.addChild(this.paintModeBtn);
+    this.paintModeBtn.visible = false;
+  }
+
+  setTouchMode(enabled: boolean): void {
+    this.paintModeBtn.visible = enabled;
+    this.keysText.visible = !enabled;
+  }
+
+  setPaintMode(mode: PaintMode): void {
+    if (mode === 'fill') {
+      this.paintModeText.text = 'FILL';
+      this.paintModeBg.clear();
+      this.paintModeBg.roundRect(-30, -14, 60, 28, 4);
+      this.paintModeBg.fill({ color: COLORS.cellFilled, alpha: 0.2 });
+      this.paintModeBg.roundRect(-30, -14, 60, 28, 4);
+      this.paintModeBg.stroke({ color: COLORS.cellFilled, width: 1.5 });
+    } else {
+      this.paintModeText.text = '×';
+      this.paintModeText.style.fill = COLORS.hintText;
+      this.paintModeBg.clear();
+      this.paintModeBg.roundRect(-30, -14, 60, 28, 4);
+      this.paintModeBg.fill({ color: COLORS.cellEmpty, alpha: 0.1 });
+      this.paintModeBg.roundRect(-30, -14, 60, 28, 4);
+      this.paintModeBg.stroke({ color: COLORS.hintText, width: 1.5 });
+    }
   }
 
   updateGridDims(hintAreaWidth: number, gridW: number, gridH: number): void {
@@ -59,10 +105,18 @@ export class UIOverlay extends Container {
     this.timerBarY = COL_HINT_AREA_HEIGHT + gridH + 8;
     this.messageX = hintAreaWidth + gridW / 2;
     this.messageY = BASE_CANVAS_HEIGHT / 2;
+    this.paintModeBtnX = hintAreaWidth + 10;
+    this.paintModeBtnY = COL_HINT_AREA_HEIGHT + gridH + 24;
 
     this.drawPanelBg();
     this.layoutElements();
     this.drawTimerBar(0);
+    this.layoutPaintModeBtn();
+  }
+
+  private layoutPaintModeBtn(): void {
+    this.paintModeBtn.x = this.paintModeBtnX + 30;
+    this.paintModeBtn.y = this.paintModeBtnY;
   }
 
   private makeText(content: string, size: number, color: number): Text {

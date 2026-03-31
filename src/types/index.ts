@@ -33,6 +33,10 @@ export enum PlayMode {
   ENDLESS = 'ENDLESS',
 }
 
+export type InputMode = 'touchscreen' | 'keyboard';
+
+export type PaintMode = 'fill' | 'cross';
+
 export interface StageData {
   id: string;
   name: string;

@@ -1,4 +1,4 @@
-import { CellState, KeyBindings } from '@/types/index.js';
+import { CellState, KeyBindings, PaintMode } from '@/types/index.js';
 import { GridContainer } from '@/views/GridContainer.js';
 import { loadBindings } from '@/systems/KeyBindingsManager.js';
 
@@ -11,10 +11,12 @@ export class InputSystem {
   private dragMode: DragMode = null;
   private dragStartState: CellState | null = null;
   private isPointerDown = false;
+  private _paintMode: PaintMode = 'fill';
 
   onCellMark?: (row: number, col: number, state: CellState) => void;
   onCellPaint?: (row: number, col: number, state: CellState) => void;
   onMoveCursor?: (row: number, col: number) => void;
+  onPaintModeChange?: (mode: PaintMode) => void;
 
   private totalRows = 0;
   private totalCols = 0;
@@ -29,6 +31,20 @@ export class InputSystem {
 
   getBindings(): KeyBindings {
     return { ...this.bindings };
+  }
+
+  get paintMode(): PaintMode {
+    return this._paintMode;
+  }
+
+  togglePaintMode(): void {
+    this._paintMode = this._paintMode === 'fill' ? 'cross' : 'fill';
+    this.onPaintModeChange?.(this._paintMode);
+  }
+
+  setPaintMode(mode: PaintMode): void {
+    this._paintMode = mode;
+    this.onPaintModeChange?.(this._paintMode);
   }
 
   init(cols: number, rows: number): void {
@@ -81,6 +97,33 @@ export class InputSystem {
     gridContainer.onCellPointerUp = () => {
       this.isPointerDown = false;
       this.dragMode = null;
+      this.dragStartState = null;
+    };
+  }
+
+  bindTouchOnGrid(gridContainer: GridContainer): void {
+    gridContainer.onCellPointerDown = (_rowIndex, _col, currentState, _button) => {
+      this.isPointerDown = true;
+      this.dragStartState = currentState;
+      this.cursorRow = -1;
+      this.cursorCol = -1;
+      this.onMoveCursor?.(-1, -1);
+    };
+
+    gridContainer.onCellPointerEnter = (rowIndex, col) => {
+      if (!this.isPointerDown) return;
+      const isCrossMode = this._paintMode === 'cross';
+      let newState: CellState;
+      if (isCrossMode) {
+        newState = this.dragStartState === CellState.CROSSED ? CellState.EMPTY : CellState.CROSSED;
+      } else {
+        newState = this.dragStartState === CellState.FILLED ? CellState.EMPTY : CellState.FILLED;
+      }
+      this.onCellPaint?.(rowIndex, col, newState);
+    };
+
+    gridContainer.onCellPointerUp = () => {
+      this.isPointerDown = false;
       this.dragStartState = null;
     };
   }

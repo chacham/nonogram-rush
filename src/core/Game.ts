@@ -9,12 +9,12 @@ import {
   canvasWidth, canvasHeight,
   gridWidth, gridHeight,
 } from '@/config/LayoutConfig.js';
-import { GameState, GameMode, PlayMode, CellState, CellType, RowData, StageData } from '@/types/index.js';
+import { GameState, GameMode, PlayMode, CellState, CellType, RowData, StageData, InputMode } from '@/types/index.js';
 import { StateMachine, createGameStateMachine } from '@/core/StateMachine.js';
 import { GridContainer } from '@/views/GridContainer.js';
 import { UIOverlay } from '@/views/UIOverlay.js';
 import { FinaleView } from '@/views/FinaleView.js';
-import { MenuView } from '@/views/MenuView.js';
+import { MenuView, loadInputMode } from '@/views/MenuView.js';
 import { SettingsView } from '@/views/SettingsView.js';
 import { ScoringSystem } from '@/systems/ScoringSystem.js';
 import { InputSystem } from '@/systems/InputSystem.js';
@@ -52,6 +52,7 @@ export class Game {
   private unbindKeyboard?: () => void;
   private stageStartTime = 0;
   private elapsedMs = 0;
+  private inputMode: InputMode = 'keyboard';
 
   constructor(app: Application) {
     this.app = app;
@@ -94,15 +95,29 @@ export class Game {
     };
 
     this.ui = new UIOverlay();
+    this.ui.onPaintModeToggle = () => {
+      this.input.togglePaintMode();
+      this.ui.setPaintMode(this.input.paintMode);
+    };
     this.scene.addChild(this.ui);
 
     this.finaleView = new FinaleView();
     this.scene.addChild(this.finaleView);
 
+    this.inputMode = loadInputMode();
     this.menuView = new MenuView();
+    this.menuView.setInputMode(this.inputMode);
     this.menuView.onPlayStage = (stage) => this.startGame(PlayMode.STAGE, stage);
     this.menuView.onPlayEndless = () => this.startGame(PlayMode.ENDLESS);
     this.menuView.onSettings = () => this.showSettings();
+    this.menuView.onInputModeChange = (mode) => {
+      this.inputMode = mode;
+      this.ui.setTouchMode(mode === 'touchscreen');
+      if (mode === 'touchscreen') {
+        this.input.setPaintMode('fill');
+        this.ui.setPaintMode('fill');
+      }
+    };
     this.app.stage.addChild(this.menuView);
 
     this.settingsView = new SettingsView();
@@ -146,7 +161,11 @@ export class Game {
   }
 
   private bindInputToGrid(): void {
-    this.input.bindDragOnGrid(this.gridContainer);
+    if (this.inputMode === 'touchscreen') {
+      this.input.bindTouchOnGrid(this.gridContainer);
+    } else {
+      this.input.bindDragOnGrid(this.gridContainer);
+    }
 
     this.input.onCellMark = (row, col, state) => {
       if (this.sm.current !== GameState.IDLE && this.sm.current !== GameState.PUSHING
@@ -194,6 +213,11 @@ export class Game {
     this.ui.updateHearts(this.hearts);
     this.ui.updateTime(0);
     this.ui.updateKeys(this.input.getBindings());
+    this.ui.setTouchMode(this.inputMode === 'touchscreen');
+    if (this.inputMode === 'touchscreen') {
+      this.input.setPaintMode('fill');
+      this.ui.setPaintMode('fill');
+    }
     this.sm.forceState(GameState.IDLE);
   }
 
