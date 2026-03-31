@@ -453,6 +453,10 @@ export class Game {
     this.ui.updateScore(this.scoring.current);
     this.ui.updateHearts(this.hearts);
 
+    this.pushTimer = 0;
+    this.pushInterval = this.calcPushInterval(Math.max(0, this.rows.length - 1));
+    this.ui.updatePushTimer(0);
+
     if (isCombo) {
       this.freezeTimer = COMBO_FREEZE_DURATION;
       this.shakeScene(8, 0.25);
