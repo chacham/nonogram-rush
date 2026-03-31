@@ -5,19 +5,39 @@ import { COLORS } from '@/config/Theme.js';
 import { Game } from '@/core/Game.js';
 
 async function bootstrap(): Promise<void> {
-  const app = new Application();
+  const container = document.getElementById('game-container')!;
+  if (!container) throw new Error('Game container not found');
+
   const touchMode = isTouchDevice();
+  const canvasW = canvasWidth(GRID_COLS);
+  const canvasH = canvasHeight(GRID_VISIBLE_ROWS, GRID_COLS, touchMode);
+
+  const app = new Application();
 
   await app.init({
-    width: canvasWidth(GRID_COLS),
-    height: canvasHeight(GRID_VISIBLE_ROWS, GRID_COLS, touchMode),
-    backgroundColor: COLORS.background,
+    width: canvasW,
+    height: canvasH,
+    background: COLORS.background,
     antialias: false,
     resolution: window.devicePixelRatio || 1,
     autoDensity: true,
   });
 
-  document.body.appendChild(app.canvas);
+  container.appendChild(app.canvas);
+
+  function scaleCanvas(): void {
+    const maxW = container.clientWidth;
+    const maxH = container.clientHeight;
+    const scale = Math.min(maxW / canvasW, maxH / canvasH, 1);
+    app.canvas.style.width = `${canvasW * scale}px`;
+    app.canvas.style.height = `${canvasH * scale}px`;
+  }
+
+  scaleCanvas();
+
+  window.addEventListener('resize', () => {
+    scaleCanvas();
+  });
 
   const game = new Game(app, touchMode);
   await game.init();

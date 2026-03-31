@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Nonogram Rush</title>
     <style>
       * {
@@ -10,21 +10,32 @@
         padding: 0;
         box-sizing: border-box;
       }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
       body {
         background: #0a0a0f;
-        overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100vw;
-        height: 100vh;
+      }
+      #game-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
       }
       canvas {
         display: block;
+        transform-origin: center center;
       }
     </style>
   </head>
   <body>
+    <div id="game-container"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
