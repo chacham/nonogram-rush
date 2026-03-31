@@ -432,6 +432,7 @@ this.gridContainer.setVisibleRowCount(this.rows.length);
     if (validateRow(rowData.cells, rowData.hints)) {
       if (this.input.isDragging) {
         rowData.cleared = true;
+        this.gridContainer.setVisibleRowCount(this.rows.length - 1);
         this.gridContainer.animateClearRows([rowIndex], () => {});
         this.pendingClearRows.push(rowIndex);
       } else {
